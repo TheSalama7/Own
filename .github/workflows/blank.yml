@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Hub</title>
+    <style>
+        /* --- Core Styling & Variables --- */
+        :root {
+            --bg-color: #0b0b0d;
+            --accent-color: #ff0055;
+            --text-color: #ffffff;
+            --truth-purple: #bf00ff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* --- Main Page Layout --- */
+        .main-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            padding: 2rem;
+            z-index: 1;
+        }
+
+        .top-row {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        /* Hamburger Menu */
+        .menu-btn {
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: none;
+            border: none;
+            padding: 10px;
+            z-index: 10;
+        }
+        .menu-btn div {
+            width: 30px;
+            height: 3px;
+            background-color: var(--text-color);
+            transition: 0.3s;
+        }
+
+        /* Kanye Quotes */
+        .quote-box {
+            max-width: 300px;
+            text-align: right;
+            font-style: italic;
+            font-size: 0.95rem;
+            color: #aaaaaa;
+            line-height: 1.4;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border-right: 3px solid var(--accent-color);
+            min-height: 4.2rem;
+        }
+
+        /* Center Button: THE TRUTH & Glitch */
+        .center-content {
+            text-align: center;
+        }
+        .truth-btn {
+            background: transparent;
+            color: var(--text-color);
+            border: 2px solid var(--text-color);
+            padding: 1.2rem 3rem;
+            font-size: 1.5rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            cursor: pointer;
+            border-radius: 0;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        /* Glitch Keyframes */
+        @keyframes glitch {
+            0% { text-shadow: 1.5px -1.5px #ff0055, -1.5px 1.5px #bf00ff; }
+            30% { text-shadow: -1.5px 1.5px #ff0055, 1.5px -1.5px #bf00ff; }
+            60% { text-shadow: 1.5px 1.5px #ff0055, -1.5px -1.5px #bf00ff; }
+            100% { text-shadow: 0px 0px #ff0055, 0px 0px #bf00ff; }
+        }
+
+        .truth-btn:hover {
+            color: var(--accent-color);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 20px rgba(255, 0, 85, 0.4);
+            transform: scale(1.03);
+            animation: glitch 0.25s infinite linear;
+        }
+
+        /* Medias (Center Down) */
+        .socials-box {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1rem;
+        }
+        .socials-box a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            opacity: 0.7;
+            transition: opacity 0.2s, color 0.2s;
+        }
+        .socials-box a:hover {
+            opacity: 1;
+            color: var(--accent-color);
+        }
+
+        /* Bottom Left Corner Latin Text */
+        .latin-text {
+            position: absolute;
+            bottom: 2rem;
+            left: 2rem;
+            font-size: 0.8rem;
+            color: #444446;
+            font-family: 'Courier New', Courier, monospace;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            user-select: none;
+            pointer-events: none;
+            min-width: 12rem;
+        }
+
+        /* --- Sidebar Navigation --- */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100%;
+            background-color: #121214;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.7);
+            transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.77,0.2,0.05,1.0);
+            z-index: 5;
+            padding: 6rem 2rem 2rem 2rem;
+            box-sizing: border-box;
+        }
+        .sidebar.open {
+            transform: translateX(0);
+        }
+        .sidebar h3 {
+            border-bottom: 1px solid #29292e;
+            padding-bottom: 0.5rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+        .vault-item {
+            display: block;
+            margin: 1.2rem 0;
+            color: #cccccc;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .vault-item:hover {
+            color: var(--accent-color);
+        }
+
+        /* --- The Truth Screen (Overlay) --- */
+        .truth-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 20;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            background: radial-gradient(circle at center, #300050 0%, #000000 100%);
+        }
+        .truth-screen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .truth-content {
+            background: rgba(13, 13, 15, 0.94);
+            border: 1px solid #222;
+            padding: 2.5rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 580px;
+            box-shadow: 0 0 50px rgba(191, 0, 255, 0.2);
+            color: var(--truth-purple); 
+        }
+        .truth-content h2 {
+            color: #ff3333;
+            margin-top: 0;
+            font-size: 1.6rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid #222;
+            padding-bottom: 1rem;
+            text-align: center;
+        }
+        .data-list {
+            text-align: left;
+            margin-top: 1.2rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+        .data-row {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.95rem;
+            color: var(--truth-purple);
+            border-bottom: 1px dashed rgba(191, 0, 255, 0.1);
+            padding-bottom: 4px;
+            min-height: 1.4rem;
+        }
+        .close-truth {
+            display: block;
+            margin: 2rem auto 0 auto;
+            background: #ff3333;
+            color: white;
+            border: none;
+            padding: 0.6rem 2rem;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* --- Ban Screen Layer --- */
+        .ban-screen {
+            position: fixed;
+            top:0; left:0; width:100%; height:100%;
+            background: #000000;
+            color: #ff3333;
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', Courier, monospace;
+            text-align: center;
+        }
+        .ban-screen h1 { 
+            font-size: 3rem; 
+            letter-spacing: 5px; 
+            margin-bottom: 10px; 
+            animation: glitch 0.3s infinite linear;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ban-layer" class="ban-screen">
+        <h1>ACCESS DENIED</h1>
+        <p id="ban-message">YOUR IP ADDRESS HAS BEEN PERMANENTLY FLAGGED AND RESTRICTED FROM THIS NETWORK NODE.</p>
+        <p style="color: #444; font-size: 0.8rem; margin-top: 2rem;">Security Threat Code: 3_FAILED_VAULT_ATTEMPTS</p>
+    </div>
+
+    <div class="main-container" id="app-content">
+        
+        <div class="top-row">
+            <button class="menu-btn" onclick="toggleSidebar(event)">
+                <div></div>
+                <div></div>
+                <div></div>
+            </button>
+            <div class="quote-box" id="quote-display"></div>
+        </div>
+
+        <div class="center-content">
+            <button class="truth-btn" id="truth-trigger">THE TRUTH</button>
+        </div>
+
+        <div class="socials-box">
+            <a href="https://www.instagram.com/jere.nieminen0/" target="_blank">Instagram</a>
+            <a href="https://open.spotify.com/playlist/2EfjMAbzXUENilT8AemW34" target="_blank">Spotify</a>
+        </div>
+
+        <div class="latin-text" id="latin-display"></div>
+    </div>
+
+    <div id="sidebar" class="sidebar">
+        <h3>Hidden Vault</h3>
+        <div class="vault-item" onclick="accessVault('https://ia800502.us.archive.org/6/items/the-anarchy-by-william-dalrymple/The%20Anarchy%20By%20William%20Dalrymple.pdf', true)">Book-1</div>
+        <div class="vault-item" onclick="accessVault('https://ia903202.us.archive.org/4/items/infantry-attacks/Infantry%20Attacks_text.pdf', true)">Book-2</div>
+        <div class="vault-item" onclick="accessVault('https://theperfectfrench.com/wp-content/uploads/2024/04/The-Complete-French-Self-Study-Guide.pdf', false)">The French</div>
+    </div>
+
+    <div id="truth-screen" class="truth-screen">
+        <div class="truth-content">
+            <h2>YOU ARE DONE</h2>
+            <div class="data-list">
+                <div class="data-row"><span id="data-ip"></span></div>
+                <div class="data-row"><span id="data-loc"></span></div>
+                <div class="data-row"><span id="data-isp"></span></div>
+                <div class="data-row"><span id="data-screen"></span></div>
+                <div class="data-row"><span id="data-os"></span></div>
+                <div class="data-row"><span id="data-lang"></span></div>
+                <div class="data-row"><span id="data-cores"></span></div>
+                <div class="data-row"><span id="data-ram"></span></div>
+                <div class="data-row"><span id="data-battery"></span></div>
+                <div class="data-row"><span id="data-timezone"></span></div>
+                <div class="data-row"><span id="data-nettype"></span></div>
+                <div class="data-row"><span id="data-touch"></span></div>
+            </div>
+            <button class="close-truth" id="truth-close">Escape</button>
+        </div>
+    </div>
+
+    <audio id="music-i-wonder" loop src="iwonder.mp3"></audio>
+    <audio id="music-blueface" loop src="blueface.mp3"></audio>
+
+    <script>
+        // --- Core Typewriter Engines ---
+        async function typeWriterAsync(text, elementId, speed = 40) {
+            return new Promise((resolve) => {
+                let i = 0;
+                const elem = document.getElementById(elementId);
+                if (elem) {
+                    elem.textContent = ""; 
+                    elem.style.visibility = "visible";
+                }
+                function type() {
+                    if (elem && i < text.length) {
+                        elem.textContent += text.charAt(i);
+                        i++;
+                        setTimeout(type, speed);
+                    } else {
+                        resolve();
+                    }
+                }
+                if (elem) type();
+                else resolve();
+            });
+        }
+
+        function typeWriter(text, elementId, speed = 40) {
+            let i = 0;
+            const elem = document.getElementById(elementId);
+            elem.textContent = "";
+            function type() {
+                if (i < text.length) {
+                    elem.textContent += text.charAt(i);
+                    i++;
+                    setTimeout(type, speed);
+                }
+            }
+            type();
+        }
+
+        // --- System Logic ---
+        let attemptsLeft = 3;
+        
+        function checkBanStatus() {
+            if (localStorage.getItem('network_banned') === 'true') {
+                document.getElementById('ban-layer').style.display = 'flex';
+                document.getElementById('app-content').style.display = 'none';
+                document.getElementById('sidebar').style.display = 'none';
+                return true;
+            }
+            return false;
+        }
+
+        const kanyeQuotes = [
+            "We're going to develop more ideas than we can update.",
+            "I still think I am the greatest.",
+            "My greatest pain in life is that I will never be able to see myself perform live.",
+            "There's nothing I can't do.",
+            "Believe in your flyness, conquer your shyness.",
+            "I feel like I'm too busy writing history to read it.",
+            "Nothing in life is promised except death.",
+            "For me, money is not my definition of success. Inspiration is my definition of success.",
+            "George Bush doesn't care about black people.",
+            "I refusal to accept other people's ideas of happiness for me.",
+            "Style is genderless.",
+            "I am Warhol. I am the number one most impactful artist of our generation.",
+            "Creative output is a reflection of your state of consciousness.",
+            "The music is our power.",
+            "Success is a journey, not a destination.",
+            "I want to make a lasting impact."
+        ];
+
+        if (!checkBanStatus()) {
+            document.body.addEventListener('click', startInitialMusic, { once: true });
+            
+            const randomQuote = kanyeQuotes[Math.floor(Math.random() * kanyeQuotes.length)];
+            typeWriter(`"${randomQuote}"`, 'quote-display', 45);
+            typeWriter("Deus est veritas", 'latin-display', 70);
+        }
+
+        function triggerPermanentBan() {
+            localStorage.setItem('network_banned', 'true');
+            checkBanStatus();
+        }
+
+        function accessVault(targetUrl, requiresPassword) {
+            if (localStorage.getItem('network_banned') === 'true') return;
+
+            if (!requiresPassword || sessionStorage.getItem('vault_unlocked') === 'true') {
+                window.open(targetUrl, '_blank');
+                return;
+            }
+
+            const passwordInput = prompt(`SECURITY CHALLENGE: Enter access code to confirm clearance level.\n(${attemptsLeft} attempts remaining)`);
+            
+            if (passwordInput === "Say Chees3") {
+                sessionStorage.setItem('vault_unlocked', 'true');
+                window.open(targetUrl, '_blank'); 
+            } else {
+                attemptsLeft--;
+                if (attemptsLeft <= 0) {
+                    alert("CRITICAL SECURITY VIOLATION: Excessive failed verification arrays. Terminating terminal permissions.");
+                    triggerPermanentBan();
+                } else {
+                    alert(`ACCESS DENIED. Invalid signature credential.\nWarning: ${attemptsLeft} validation attempts remaining before network node isolation.`);
+                }
+            }
+        }
+
+        function toggleSidebar(event) {
+            event.stopPropagation(); 
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+        
+        document.addEventListener('click', (e) => {
+            const sidebar = document.getElementById('sidebar');
+            if (!sidebar.contains(e.target) && sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+            }
+        });
+
+        // --- Audio Controls ---
+        const track1 = document.getElementById('music-i-wonder');
+        const track2 = document.getElementById('music-blueface');
+        let initialMusicStarted = false;
+
+        track1.volume = 0.2; 
+        track2.volume = 1.0; 
+
+        function startInitialMusic() {
+            if (!initialMusicStarted && localStorage.getItem('network_banned') !== 'true') {
+                track1.play().catch(e => console.log("Audio waiting..."));
+                initialMusicStarted = true;
+            }
+        }
+
+        // --- THE TRUTH Trigger Matrix ---
+        const truthTrigger = document.getElementById('truth-trigger');
+        const truthScreen = document.getElementById('truth-screen');
+        const truthClose = document.getElementById('truth-close');
+        const dataTypingSpeed = 35;
+
+        truthTrigger.addEventListener('click', async (e) => {
+            e.stopPropagation(); 
+            if (localStorage.getItem('network_banned') === 'true') return;
+            
+            truthScreen.classList.add('active');
+            track1.pause();
+            track2.currentTime = 0; 
+            track2.play().catch(e => console.log("Audio adjustment error."));
+
+            const basicPromise = new Promise(resolve => {
+                const screenRes = `${window.screen.width} x ${window.screen.height} Display Node`;
+                const lang = navigator.language.toUpperCase();
+                
+                let osRaw = navigator.userAgent;
+                let currentOS = "Unknown Core";
+                if (osRaw.indexOf("Win") !== -1) currentOS = "Windows Environment";
+                if (osRaw.indexOf("Mac") !== -1) currentOS = "MacOS / iOS Framework";
+                if (osRaw.indexOf("Linux") !== -1) currentOS = "Linux / Android Kernel";
+
+                const cores = navigator.hardwareConcurrency || "Undetermined";
+                const ramRaw = navigator.deviceMemory || "Protected Mode";
+                const ram = typeof ramRaw === 'number' ? `~${ramRaw} GB Allocated` : ramRaw;
+
+                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Universal Node";
+                const handlesTouch = navigator.maxTouchPoints > 0 ? "Touch Interface (Mobile Device)" : "Tactile Cursor (Desktop Architecture)";
+
+                const netConnection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                const netType = netConnection ? `${netConnection.effectiveType.toUpperCase()} Pipeline` : "Standard Access Channel";
+
+                resolve({ screenRes, lang, currentOS, cores, ram, tz, handlesTouch, netType });
+            });
+
+            const batteryPromise = navigator.getBattery ? navigator.getBattery() : Promise.resolve(null);
+            const geoPromise = fetch('https://ipapi.co/json/').then(r => r.json()).catch(() => null);
+
+            const [basic, battery, geo] = await Promise.all([basicPromise, batteryPromise, geoPromise]);
+
+            const ipData = geo ? geo.ip : "Connection Shielded";
+            const locData = geo ? `${geo.city}, ${geo.region_code}, ${geo.country_name}` : "Unknown Route";
+            const ispData = geo ? geo.org : "Obfuscated Network";
+
+            let batteryData = "Telemetry Unavailable";
+            if (battery) {
+                const pct = Math.round(battery.level * 100);
+                const status = battery.charging ? "Charging Array Link" : "Isolated Reservoir";
+                batteryData = `${pct}% Capacity [${status}]`;
+            }
+
+            await typeWriterAsync(`Network IP: ${ipData}`, 'data-ip', dataTypingSpeed);
+            await typeWriterAsync(`Geographic Nodes: ${locData}`, 'data-loc', dataTypingSpeed);
+            await typeWriterAsync(`ISP Carrier: ${ispData}`, 'data-isp', dataTypingSpeed);
+            await typeWriterAsync(`Display Array: ${basic.screenRes}`, 'data-screen', dataTypingSpeed);
+            await typeWriterAsync(`Platform Core: ${basic.currentOS}`, 'data-os', dataTypingSpeed);
+            await typeWriterAsync(`Client Language: ${basic.lang}`, 'data-lang', dataTypingSpeed);
+            await typeWriterAsync(`Processing Cores: ${basic.cores} Threads Active`, 'data-cores', dataTypingSpeed);
+            await typeWriterAsync(`Estimated Memory: ${basic.ram}`, 'data-ram', dataTypingSpeed);
+            await typeWriterAsync(`Battery Diagnostics: ${batteryData}`, 'data-battery', dataTypingSpeed);
+            await typeWriterAsync(`Temporal Node: ${basic.tz.toUpperCase()}`, 'data-timezone', dataTypingSpeed);
+            await typeWriterAsync(`Network Protocol: ${basic.netType}`, 'data-nettype', dataTypingSpeed);
+            await typeWriterAsync(`Interface Mode: ${basic.handlesTouch}`, 'data-touch', dataTypingSpeed);
+        });
+
+        truthClose.addEventListener('click', () => {
+            truthScreen.classList.remove('active');
+            track2.pause();
+            track1.play();
+        });
+    </script>
+</body>
+</html>
