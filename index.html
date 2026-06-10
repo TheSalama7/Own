@@ -21,6 +21,7 @@
             color: var(--text-color);
             overflow: hidden;
             height: 100vh;
+            height: 100dvh; /* Adapts cleanly to mobile browser frames */
         }
 
         /* --- Main Page Layout --- */
@@ -28,6 +29,7 @@
             position: relative;
             width: 100%;
             height: 100vh;
+            height: 100dvh; /* Prevents background elements scaling out of view on phones */
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -197,6 +199,9 @@
             pointer-events: none;
             transition: opacity 0.5s ease;
             background: radial-gradient(circle at center, #300050 0%, #000000 100%);
+            overflow-y: auto; /* Allows scrolling on smaller mobile viewports */
+            padding: 1rem 0;
+            box-sizing: border-box;
         }
         .truth-screen.active {
             opacity: 1;
@@ -223,6 +228,7 @@
             padding-bottom: 1rem;
             text-align: center;
         }
+
         .data-list {
             text-align: left;
             margin-top: 1.2rem;
@@ -272,6 +278,62 @@
             margin-bottom: 10px; 
             animation: glitch 0.3s infinite linear;
         }
+
+        /* --- Custom Mobile Adjustments --- */
+        @media (max-width: 600px) {
+            .main-container {
+                padding: 1.2rem;
+            }
+            .top-row {
+                align-items: center;
+            }
+            .quote-box {
+                max-width: 68%;
+                font-size: 0.78rem;
+                padding: 6px 10px;
+                min-height: 3.8rem;
+            }
+            .truth-btn {
+                padding: 1rem 2rem;
+                font-size: 1.15rem;
+                letter-spacing: 2px;
+            }
+            .socials-box {
+                gap: 1.5rem;
+                margin-bottom: 2.5rem;
+            }
+            .latin-text {
+                bottom: 0.6rem;
+                left: 50%;
+                transform: translateX(-50%);
+                text-align: center;
+                font-size: 0.7rem;
+                min-width: unset;
+                width: 100%;
+            }
+            .truth-content {
+                padding: 1.2rem;
+                width: 95%;
+            }
+            .truth-content h2 {
+                font-size: 1.2rem;
+                padding-bottom: 0.6rem;
+            }
+            .data-row {
+                font-size: 0.75rem;
+                min-height: 1.2rem;
+                word-break: break-all;
+            }
+            .close-truth {
+                margin-top: 1.2rem;
+                padding: 0.5rem 1.5rem;
+                font-size: 0.9rem;
+            }
+            .ban-screen h1 {
+                font-size: 2rem;
+                letter-spacing: 2px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -307,14 +369,19 @@
 
     <div id="sidebar" class="sidebar">
         <h3>Hidden Vault</h3>
-        <div class="vault-item" onclick="accessVault('https://ia800502.us.archive.org/6/items/the-anarchy-by-william-dalrymple/The%20Anarchy%20By%20William%20Dalrymple.pdf', true)">Book-1</div>
-        <div class="vault-item" onclick="accessVault('https://ia903202.us.archive.org/4/items/infantry-attacks/Infantry%20Attacks_text.pdf', true)">Book-2</div>
-        <div class="vault-item" onclick="accessVault('https://theperfectfrench.com/wp-content/uploads/2024/04/The-Complete-French-Self-Study-Guide.pdf', false)">The French</div>
+        <div class="vault-item" onclick="accessVault('book1', true)">Book-1</div>
+        <div class="vault-item" onclick="accessVault('book2', true)">Book-2</div>
+        <div class="vault-item" onclick="accessVault('book3', true)">Book-3</div>
+        <div class="vault-item" onclick="accessVault('book4', true)">Book-4</div>
+        <div class="vault-item" onclick="accessVault('napoleon', false)">Napoleon the Great</div>
+        <div class="vault-item" onclick="accessVault('cia_rr1', true)">Cia RR-1</div>
+        <div class="vault-item" onclick="accessVault('french', false)">The French</div>
     </div>
 
     <div id="truth-screen" class="truth-screen">
         <div class="truth-content">
             <h2>YOU ARE DONE</h2>
+
             <div class="data-list">
                 <div class="data-row"><span id="data-ip"></span></div>
                 <div class="data-row"><span id="data-loc"></span></div>
@@ -337,6 +404,25 @@
     <audio id="music-blueface" loop src="blueface.mp3"></audio>
 
     <script>
+        // --- Vault Obfuscation Registry ---
+        const vaultRegistry = {
+            book1: "aHR0cHM6Ly9pYTgwMDUwMi51cy5hcmNoaXZlLm9yZy82L2l0ZW1zL3RoZS1hbmFyY2h5LWJ5LXdpbGxpYW0tZGFscnltcGxlL1RoZSUyMEFuYXJjaHklMjBCeSUyMFdpbGxpYW0lMjBEYWxyeW1wbGUucGRm",
+            book2: "aHR0cHM6Ly9pYTkwMzIwMi51cy5hcmNoaXZlLm9yZy80L2l0ZW1zL2luZmFudHJ5LWF0dGFja3MvSW5mYW50cnklMjBBdHRhY2tzX3RleHQucGRm",
+            book3: "aHR0cHM6Ly9wZGZzLnNlbWFudGljc2Nob2xhci5vcmcvNTA4Ny85M2M4NDA1N2M4MWY5ODRmNDYzZTE0NzQ0NjY2M2FiMTcyMzgucGRm",
+            book4: "aHR0cHM6Ly9pYTkwMjgwNC51cy5hcmNoaXZlLm9yZy8zNS9pdGVtcy9qb3NlcGgtZ29lYmJlbHMtYXJjaGl2ZS9Eci4lMjBKb3NlcGglMjBHb2ViYmVscyUyMEFydGljbGVzJTIwYW5kJTIwU3BlZWNoZXMlMjAtJTIwMTkyNy0xOTQ1JTIwLSUyMEpvc2VwaCUyMEdvZWJiZWxzLnBkZg==",
+            napoleon: "aHR0cHM6Ly9hdmFsb25saWJyYXJ5Lm5ldC9lYm9va3MvTG91aXMlMjBBbnRvaW5lJTIwRmF1dmVsZXQlMjBkZSUyMEJvdXJyaWVubmUlMjAtJTIwTWVtb2lycyUyMG9mJTIwTmFwb2xlb24lMjBCb25hcGFydGUucGRm",
+            cia_rr1: "aHR0cHM6Ly9hcmNoaXZlLm9yZy9kZXRhaWxzL2NpYS1yZWFkaW5ncm9vbS1kb2N1bWVudC1jaWEtcmRwNzgtMDA5MTVyMDAwNzAwMTIwMDAyLTkvcGFnZS9uMy9tb2RlLzJ1cA==",
+            french: "aHR0cHM6Ly90aGVwZXJmZWN0ZnJlbmNoLmNvbS93cC1jb250ZW50L3VwbG9hZHMvMjAyNC8wNC9UaGUtQ29tcGxldGUtRnJlbmNoLVNlbGYtU3R1ZHktR3VpZGUucGRm"
+        };
+
+        // Cryptographic SHA-256 Engine
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
         // --- Core Typewriter Engines ---
         async function typeWriterAsync(text, elementId, speed = 40) {
             return new Promise((resolve) => {
@@ -419,18 +505,34 @@
             checkBanStatus();
         }
 
-        function accessVault(targetUrl, requiresPassword) {
+        async function accessVault(itemId, requiresPassword) {
             if (localStorage.getItem('network_banned') === 'true') return;
 
-            if (!requiresPassword || sessionStorage.getItem('vault_unlocked') === 'true') {
+            const targetUrl = atob(vaultRegistry[itemId]);
+
+            // Unique sessionStorage entries preserve independent unlock matrices
+            if (!requiresPassword || sessionStorage.getItem('vault_unlocked_' + itemId) === 'true') {
                 window.open(targetUrl, '_blank');
                 return;
             }
 
             const passwordInput = prompt(`SECURITY CHALLENGE: Enter access code to confirm clearance level.\n(${attemptsLeft} attempts remaining)`);
             
-            if (passwordInput === "Say Chees3") {
-                sessionStorage.setItem('vault_unlocked', 'true');
+            if (passwordInput === null) return; 
+
+            const hashedInput = await sha256(passwordInput);
+            
+            // Distributed Hash Signature Library
+            const vaultHashes = {
+                book1: "8bd26852ab598941d2747d7d375a21ce3461b61d861227fc396fb34aa08e71dd", // "Say Chees3"
+                book2: "8bd26852ab598941d2747d7d375a21ce3461b61d861227fc396fb34aa08e71dd",
+                book3: "8bd26852ab598941d2747d7d375a21ce3461b61d861227fc396fb34aa08e71dd",
+                book4: "8bd26852ab598941d2747d7d375a21ce3461b61d861227fc396fb34aa08e71dd",
+                cia_rr1: "85fc797deb4a6729e5e1934763d39d8562c73be1b8af59e473feb0a99bc39363" // "S3o5m8e9!_"
+            };
+            
+            if (hashedInput === vaultHashes[itemId]) {
+                sessionStorage.setItem('vault_unlocked_' + itemId, 'true');
                 window.open(targetUrl, '_blank'); 
             } else {
                 attemptsLeft--;
@@ -515,7 +617,7 @@
 
             const ipData = geo ? geo.ip : "Connection Shielded";
             const locData = geo ? `${geo.city}, ${geo.region_code}, ${geo.country_name}` : "Unknown Route";
-            const ispData = geo ? geo.org : "Obfuscated Network";
+            const ipDataIsp = geo ? geo.org : "Obfuscated Network";
 
             let batteryData = "Telemetry Unavailable";
             if (battery) {
@@ -526,7 +628,7 @@
 
             await typeWriterAsync(`Network IP: ${ipData}`, 'data-ip', dataTypingSpeed);
             await typeWriterAsync(`Geographic Nodes: ${locData}`, 'data-loc', dataTypingSpeed);
-            await typeWriterAsync(`ISP Carrier: ${ispData}`, 'data-isp', dataTypingSpeed);
+            await typeWriterAsync(`ISP Carrier: ${ipDataIsp}`, 'data-isp', dataTypingSpeed);
             await typeWriterAsync(`Display Array: ${basic.screenRes}`, 'data-screen', dataTypingSpeed);
             await typeWriterAsync(`Platform Core: ${basic.currentOS}`, 'data-os', dataTypingSpeed);
             await typeWriterAsync(`Client Language: ${basic.lang}`, 'data-lang', dataTypingSpeed);
