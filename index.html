@@ -11,6 +11,7 @@
             --accent-color: #ff0055;
             --text-color: #ffffff;
             --truth-purple: #bf00ff;
+            --owner-green: #00ff66;
         }
 
         body {
@@ -21,7 +22,20 @@
             color: var(--text-color);
             overflow: hidden;
             height: 100vh;
-            height: 100dvh; /* Adapts cleanly to mobile browser frames */
+            height: 100dvh;
+        }
+
+        /* --- Matrix Rain Canvas --- */
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.25;
+            display: none;
         }
 
         /* --- Main Page Layout --- */
@@ -29,7 +43,7 @@
             position: relative;
             width: 100%;
             height: 100vh;
-            height: 100dvh; /* Prevents background elements scaling out of view on phones */
+            height: 100dvh;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -97,7 +111,6 @@
             position: relative;
         }
 
-        /* Glitch Keyframes */
         @keyframes glitch {
             0% { text-shadow: 1.5px -1.5px #ff0055, -1.5px 1.5px #bf00ff; }
             30% { text-shadow: -1.5px 1.5px #ff0055, 1.5px -1.5px #bf00ff; }
@@ -113,7 +126,7 @@
             animation: glitch 0.25s infinite linear;
         }
 
-        /* Medias (Center Down) */
+        /* Social Links */
         .socials-box {
             display: flex;
             gap: 2rem;
@@ -143,7 +156,7 @@
             letter-spacing: 2px;
             text-transform: uppercase;
             user-select: none;
-            pointer-events: none;
+            cursor: pointer;
             min-width: 12rem;
         }
 
@@ -184,8 +197,8 @@
             color: var(--accent-color);
         }
 
-        /* --- The Truth Screen (Overlay) --- */
-        .truth-screen {
+        /* --- Overlay Modals (The Truth & Owner Control) --- */
+        .modal-screen {
             position: fixed;
             top: 0;
             left: 0;
@@ -197,19 +210,19 @@
             align-items: center;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.5s ease;
-            background: radial-gradient(circle at center, #300050 0%, #000000 100%);
-            overflow-y: auto; /* Allows scrolling on smaller mobile viewports */
+            transition: opacity 0.4s ease;
+            background: radial-gradient(circle at center, #1b002c 0%, #000000 100%);
+            overflow-y: auto;
             padding: 1rem 0;
             box-sizing: border-box;
         }
-        .truth-screen.active {
+        .modal-screen.active {
             opacity: 1;
             pointer-events: auto;
         }
         
         .truth-content {
-            background: rgba(13, 13, 15, 0.94);
+            background: rgba(13, 13, 15, 0.95);
             border: 1px solid #222;
             padding: 2.5rem;
             border-radius: 12px;
@@ -240,13 +253,75 @@
             font-family: 'Courier New', Courier, monospace;
             font-size: 0.95rem;
             color: var(--truth-purple);
-            border-bottom: 1px dashed rgba(191, 0, 255, 0.1);
+            border-bottom: 1px dashed rgba(191, 0, 255, 0.15);
             padding-bottom: 4px;
             min-height: 1.4rem;
         }
-        .close-truth {
+
+        /* --- OWNER CONTROL CENTER STYLING --- */
+        .owner-content {
+            background: rgba(10, 15, 12, 0.96);
+            border: 1px solid var(--owner-green);
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 650px;
+            box-shadow: 0 0 40px rgba(0, 255, 102, 0.25);
+            color: var(--owner-green);
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .owner-content h2 {
+            color: var(--owner-green);
+            margin-top: 0;
+            font-size: 1.4rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid rgba(0, 255, 102, 0.3);
+            padding-bottom: 0.8rem;
+            text-align: center;
+        }
+        .owner-section {
+            margin: 1.2rem 0;
+            background: rgba(0, 255, 102, 0.03);
+            padding: 1rem;
+            border-radius: 6px;
+            border-left: 3px solid var(--owner-green);
+        }
+        .owner-section h4 {
+            margin: 0 0 0.6rem 0;
+            color: #ffffff;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+        }
+        .owner-btn {
+            background: transparent;
+            color: var(--owner-green);
+            border: 1px solid var(--owner-green);
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            transition: all 0.2s;
+            margin-top: 0.5rem;
+        }
+        .owner-btn:hover {
+            background: var(--owner-green);
+            color: #000000;
+        }
+        .owner-input {
+            width: 100%;
+            background: #000;
+            border: 1px solid rgba(0, 255, 102, 0.4);
+            color: var(--owner-green);
+            padding: 0.5rem;
+            box-sizing: border-box;
+            font-family: 'Courier New', Courier, monospace;
+            margin-top: 0.4rem;
+        }
+
+        .close-btn {
             display: block;
-            margin: 2rem auto 0 auto;
+            margin: 1.5rem auto 0 auto;
             background: #ff3333;
             color: white;
             border: none;
@@ -279,64 +354,21 @@
             animation: glitch 0.3s infinite linear;
         }
 
-        /* --- Custom Mobile Adjustments --- */
+        /* Responsive Adjustments */
         @media (max-width: 600px) {
-            .main-container {
-                padding: 1.2rem;
-            }
-            .top-row {
-                align-items: center;
-            }
-            .quote-box {
-                max-width: 68%;
-                font-size: 0.78rem;
-                padding: 6px 10px;
-                min-height: 3.8rem;
-            }
-            .truth-btn {
-                padding: 1rem 2rem;
-                font-size: 1.15rem;
-                letter-spacing: 2px;
-            }
-            .socials-box {
-                gap: 1.5rem;
-                margin-bottom: 2.5rem;
-            }
-            .latin-text {
-                bottom: 0.6rem;
-                left: 50%;
-                transform: translateX(-50%);
-                text-align: center;
-                font-size: 0.7rem;
-                min-width: unset;
-                width: 100%;
-            }
-            .truth-content {
-                padding: 1.2rem;
-                width: 95%;
-            }
-            .truth-content h2 {
-                font-size: 1.2rem;
-                padding-bottom: 0.6rem;
-            }
-            .data-row {
-                font-size: 0.75rem;
-                min-height: 1.2rem;
-                word-break: break-all;
-            }
-            .close-truth {
-                margin-top: 1.2rem;
-                padding: 0.5rem 1.5rem;
-                font-size: 0.9rem;
-            }
-            .ban-screen h1 {
-                font-size: 2rem;
-                letter-spacing: 2px;
-            }
+            .main-container { padding: 1.2rem; }
+            .quote-box { max-width: 68%; font-size: 0.78rem; padding: 6px 10px; min-height: 3.8rem; }
+            .truth-btn { padding: 1rem 2rem; font-size: 1.15rem; letter-spacing: 2px; }
+            .socials-box { gap: 1.5rem; margin-bottom: 2.5rem; }
+            .latin-text { bottom: 0.6rem; left: 50%; transform: translateX(-50%); text-align: center; font-size: 0.7rem; width: 100%; }
+            .truth-content, .owner-content { padding: 1.2rem; width: 95%; }
+            .data-row { font-size: 0.75rem; word-break: break-all; }
         }
     </style>
 </head>
 <body>
+
+    <canvas id="matrix-canvas"></canvas>
 
     <div id="ban-layer" class="ban-screen">
         <h1>ACCESS DENIED</h1>
@@ -364,7 +396,7 @@
             <a href="https://open.spotify.com/playlist/2EfjMAbzXUENilT8AemW34" target="_blank">Spotify</a>
         </div>
 
-        <div class="latin-text" id="latin-display"></div>
+        <div class="latin-text" id="latin-display" onclick="registerLatinClick()"></div>
     </div>
 
     <div id="sidebar" class="sidebar">
@@ -378,13 +410,15 @@
         <div class="vault-item" onclick="accessVault('french', false)">The French</div>
     </div>
 
-    <div id="truth-screen" class="truth-screen">
+    <!-- THE TRUTH SCREEN -->
+    <div id="truth-screen" class="modal-screen">
         <div class="truth-content">
             <h2>YOU ARE DONE</h2>
 
             <div class="data-list">
                 <div class="data-row"><span id="data-ip"></span></div>
                 <div class="data-row"><span id="data-loc"></span></div>
+                <div class="data-row"><span id="data-weather"></span></div>
                 <div class="data-row"><span id="data-isp"></span></div>
                 <div class="data-row"><span id="data-screen"></span></div>
                 <div class="data-row"><span id="data-os"></span></div>
@@ -396,12 +430,41 @@
                 <div class="data-row"><span id="data-nettype"></span></div>
                 <div class="data-row"><span id="data-touch"></span></div>
             </div>
-            <button class="close-truth" id="truth-close">Escape</button>
+            <button class="close-btn" id="truth-close">Escape</button>
         </div>
     </div>
 
-    <audio id="music-i-wonder" loop src="iwonder.mp3"></audio>
-    <audio id="music-blueface" loop src="blueface.mp3"></audio>
+    <!-- OWNER CONTROL CENTER -->
+    <div id="owner-screen" class="modal-screen">
+        <div class="owner-content">
+            <h2>[ ROOT CLEARANCE // OWNER CONTROL ]</h2>
+            
+            <div class="owner-section">
+                <h4>📊 Site Traffic & Telemetry</h4>
+                <div id="owner-traffic-stats">Loading metrics...</div>
+            </div>
+
+            <div class="owner-section">
+                <h4>🛡️ Security Override & Ban Controls</h4>
+                <div>Failed Intrusions Logged: <span id="owner-failed-attempts">0</span></div>
+                <button class="owner-btn" onclick="clearBansAndReset()">OVERRIDE / UNBAN NETWORK</button>
+            </div>
+
+            <div class="owner-section">
+                <h4>🔑 SHA-256 Hash Generator Tool</h4>
+                <small style="color: #888;">Type a new password below to get its hidden hash for future code updates:</small>
+                <input type="text" id="hash-input" class="owner-input" placeholder="Enter plain password..." oninput="generateQuickHash()">
+                <input type="text" id="hash-output" class="owner-input" placeholder="SHA-256 result will appear here..." readonly style="color: #00ff66;">
+            </div>
+
+            <div class="owner-section">
+                <h4>💻 Visual Enhancement</h4>
+                <button class="owner-btn" onclick="toggleMatrixRain()">TOGGLE MATRIX RAIN</button>
+            </div>
+
+            <button class="close-btn" onclick="closeOwnerControl()">Exit Terminal</button>
+        </div>
+    </div>
 
     <script>
         // --- Vault Obfuscation Registry ---
@@ -415,7 +478,7 @@
             french: "aHR0cHM6Ly90aGVwZXJmZWN0ZnJlbmNoLmNvbS93cC1jb250ZW50L3VwbG9hZHMvMjAyNC8wNC9UaGUtQ29tcGxldGUtRnJlbmNoLVNlbGYtU3R1ZHktR3VpZGUucGRm"
         };
 
-        // Cryptographic SHA-256 Engine
+        // SHA-256 Engine
         async function sha256(message) {
             const msgBuffer = new TextEncoder().encode(message);
             const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -423,8 +486,23 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
+        // --- Traffic & Analytics Engine ---
+        function initTrafficTracker() {
+            let visits = parseInt(localStorage.getItem('traffic_visits') || '0') + 1;
+            localStorage.setItem('traffic_visits', visits);
+
+            if (!sessionStorage.getItem('session_counted')) {
+                let sessions = parseInt(localStorage.getItem('traffic_sessions') || '0') + 1;
+                localStorage.setItem('traffic_sessions', sessions);
+                sessionStorage.setItem('session_counted', 'true');
+            }
+
+            localStorage.setItem('traffic_last_visit', new Date().toLocaleString());
+        }
+        initTrafficTracker();
+
         // --- Core Typewriter Engines ---
-        async function typeWriterAsync(text, elementId, speed = 40) {
+        async function typeWriterAsync(text, elementId, speed = 35) {
             return new Promise((resolve) => {
                 let i = 0;
                 const elem = document.getElementById(elementId);
@@ -446,9 +524,10 @@
             });
         }
 
-        function typeWriter(text, elementId, speed = 40) {
+        function typeWriter(text, elementId, speed = 45) {
             let i = 0;
             const elem = document.getElementById(elementId);
+            if (!elem) return;
             elem.textContent = "";
             function type() {
                 if (i < text.length) {
@@ -493,8 +572,6 @@
         ];
 
         if (!checkBanStatus()) {
-            document.body.addEventListener('click', startInitialMusic, { once: true });
-            
             const randomQuote = kanyeQuotes[Math.floor(Math.random() * kanyeQuotes.length)];
             typeWriter(`"${randomQuote}"`, 'quote-display', 45);
             typeWriter("Deus est veritas", 'latin-display', 70);
@@ -502,6 +579,8 @@
 
         function triggerPermanentBan() {
             localStorage.setItem('network_banned', 'true');
+            let failedLogs = parseInt(localStorage.getItem('traffic_failed_logs') || '0') + 1;
+            localStorage.setItem('traffic_failed_logs', failedLogs);
             checkBanStatus();
         }
 
@@ -510,8 +589,8 @@
 
             const targetUrl = atob(vaultRegistry[itemId]);
 
-            // Unique sessionStorage entries preserve independent unlock matrices
             if (!requiresPassword || sessionStorage.getItem('vault_unlocked_' + itemId) === 'true') {
+                trackVaultClick(itemId);
                 window.open(targetUrl, '_blank');
                 return;
             }
@@ -520,9 +599,14 @@
             
             if (passwordInput === null) return; 
 
+            // Check Owner Master Password ("0wn3r!")
+            if (passwordInput === "0wn3r!") {
+                openOwnerControl();
+                return;
+            }
+
             const hashedInput = await sha256(passwordInput);
             
-            // Distributed Hash Signature Library
             const vaultHashes = {
                 book1: "8bd26852ab598941d2747d7d375a21ce3461b61d861227fc396fb34aa08e71dd", // "Say Chees3"
                 book2: "8bd26852ab598941d2747d7d375a21ce3461b61d861227fc396fb34aa08e71dd",
@@ -533,9 +617,13 @@
             
             if (hashedInput === vaultHashes[itemId]) {
                 sessionStorage.setItem('vault_unlocked_' + itemId, 'true');
+                trackVaultClick(itemId);
                 window.open(targetUrl, '_blank'); 
             } else {
                 attemptsLeft--;
+                let failedLogs = parseInt(localStorage.getItem('traffic_failed_logs') || '0') + 1;
+                localStorage.setItem('traffic_failed_logs', failedLogs);
+
                 if (attemptsLeft <= 0) {
                     alert("CRITICAL SECURITY VIOLATION: Excessive failed verification arrays. Terminating terminal permissions.");
                     triggerPermanentBan();
@@ -543,6 +631,12 @@
                     alert(`ACCESS DENIED. Invalid signature credential.\nWarning: ${attemptsLeft} validation attempts remaining before network node isolation.`);
                 }
             }
+        }
+
+        function trackVaultClick(itemId) {
+            let counts = JSON.parse(localStorage.getItem('vault_stats') || '{}');
+            counts[itemId] = (counts[itemId] || 0) + 1;
+            localStorage.setItem('vault_stats', JSON.stringify(counts));
         }
 
         function toggleSidebar(event) {
@@ -557,35 +651,84 @@
             }
         });
 
-        // --- Audio Controls ---
-        const track1 = document.getElementById('music-i-wonder');
-        const track2 = document.getElementById('music-blueface');
-        let initialMusicStarted = false;
+        // --- OWNER CONTROL CENTER ENGINE ---
+        let latinClickCounter = 0;
+        let latinClickTimer = null;
 
-        track1.volume = 0.2; 
-        track2.volume = 1.0; 
-
-        function startInitialMusic() {
-            if (!initialMusicStarted && localStorage.getItem('network_banned') !== 'true') {
-                track1.play().catch(e => console.log("Audio waiting..."));
-                initialMusicStarted = true;
+        function registerLatinClick() {
+            latinClickCounter++;
+            clearTimeout(latinClickTimer);
+            if (latinClickCounter >= 3) {
+                latinClickCounter = 0;
+                const pass = prompt("ENTER OWNER IDENTIFICATION SIGNATURE:");
+                if (pass === "0wn3r!") {
+                    openOwnerControl();
+                } else if (pass !== null) {
+                    alert("INVALID OWNER CREDENTIAL.");
+                }
+            } else {
+                latinClickTimer = setTimeout(() => { latinClickCounter = 0; }, 1200);
             }
         }
 
-        // --- THE TRUTH Trigger Matrix ---
+        function openOwnerControl() {
+            const screen = document.getElementById('owner-screen');
+            screen.classList.add('active');
+
+            const visits = localStorage.getItem('traffic_visits') || 0;
+            const sessions = localStorage.getItem('traffic_sessions') || 0;
+            const lastVisit = localStorage.getItem('traffic_last_visit') || 'N/A';
+            const vaultStats = JSON.parse(localStorage.getItem('vault_stats') || '{}');
+            const failedLogs = localStorage.getItem('traffic_failed_logs') || 0;
+
+            let vaultBreakdown = Object.entries(vaultStats)
+                .map(([item, count]) => `${item}: ${count} clicks`)
+                .join(', ') || 'No clicks registered';
+
+            document.getElementById('owner-traffic-stats').innerHTML = `
+                • Total Page Loads: <strong>${visits}</strong><br>
+                • Unique Browser Sessions: <strong>${sessions}</strong><br>
+                • Last Session Time: <strong>${lastVisit}</strong><br>
+                • Vault Item Usage: <strong>${vaultBreakdown}</strong>
+            `;
+
+            document.getElementById('owner-failed-attempts').textContent = failedLogs;
+        }
+
+        function closeOwnerControl() {
+            document.getElementById('owner-screen').classList.remove('active');
+        }
+
+        function clearBansAndReset() {
+            localStorage.removeItem('network_banned');
+            localStorage.setItem('traffic_failed_logs', '0');
+            attemptsLeft = 3;
+            document.getElementById('ban-layer').style.display = 'none';
+            document.getElementById('app-content').style.display = 'flex';
+            document.getElementById('owner-failed-attempts').textContent = '0';
+            alert("SUCCESS: System bans overridden. Local clearance restored.");
+        }
+
+        async function generateQuickHash() {
+            const input = document.getElementById('hash-input').value;
+            if (!input) {
+                document.getElementById('hash-output').value = '';
+                return;
+            }
+            const res = await sha256(input);
+            document.getElementById('hash-output').value = res;
+        }
+
+        // --- THE TRUTH Trigger Matrix with Local Weather ---
         const truthTrigger = document.getElementById('truth-trigger');
         const truthScreen = document.getElementById('truth-screen');
         const truthClose = document.getElementById('truth-close');
-        const dataTypingSpeed = 35;
 
         truthTrigger.addEventListener('click', async (e) => {
             e.stopPropagation(); 
             if (localStorage.getItem('network_banned') === 'true') return;
             
             truthScreen.classList.add('active');
-            track1.pause();
-            track2.currentTime = 0; 
-            track2.play().catch(e => console.log("Audio adjustment error."));
 
             const basicPromise = new Promise(resolve => {
                 const screenRes = `${window.screen.width} x ${window.screen.height} Display Node`;
@@ -615,6 +758,28 @@
 
             const [basic, battery, geo] = await Promise.all([basicPromise, batteryPromise, geoPromise]);
 
+            // Weather Integration via Open-Meteo API
+            let weatherData = "Weather Telemetry Unavailable";
+            if (geo && geo.latitude && geo.longitude) {
+                try {
+                    const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${geo.latitude}&longitude=${geo.longitude}&current_weather=true`).then(r => r.json());
+                    if (wRes && wRes.current_weather) {
+                        const temp = Math.round(wRes.current_weather.temperature);
+                        const code = wRes.current_weather.weathercode;
+                        let cond = "Clear";
+                        if (code >= 1 && code <= 3) cond = "Partly Cloudy";
+                        else if (code >= 45 && code <= 48) cond = "Foggy";
+                        else if (code >= 51 && code <= 67) cond = "Rainy";
+                        else if (code >= 71 && code <= 77) cond = "Snowy";
+                        else if (code >= 80) cond = "Stormy";
+
+                        weatherData = `${temp > 0 ? '+' : ''}${temp}°C (${cond})`;
+                    }
+                } catch(err) {
+                    weatherData = "Weather Link Failed";
+                }
+            }
+
             const ipData = geo ? geo.ip : "Connection Shielded";
             const locData = geo ? `${geo.city}, ${geo.region_code}, ${geo.country_name}` : "Unknown Route";
             const ipDataIsp = geo ? geo.org : "Obfuscated Network";
@@ -626,25 +791,71 @@
                 batteryData = `${pct}% Capacity [${status}]`;
             }
 
-            await typeWriterAsync(`Network IP: ${ipData}`, 'data-ip', dataTypingSpeed);
-            await typeWriterAsync(`Geographic Nodes: ${locData}`, 'data-loc', dataTypingSpeed);
-            await typeWriterAsync(`ISP Carrier: ${ipDataIsp}`, 'data-isp', dataTypingSpeed);
-            await typeWriterAsync(`Display Array: ${basic.screenRes}`, 'data-screen', dataTypingSpeed);
-            await typeWriterAsync(`Platform Core: ${basic.currentOS}`, 'data-os', dataTypingSpeed);
-            await typeWriterAsync(`Client Language: ${basic.lang}`, 'data-lang', dataTypingSpeed);
-            await typeWriterAsync(`Processing Cores: ${basic.cores} Threads Active`, 'data-cores', dataTypingSpeed);
-            await typeWriterAsync(`Estimated Memory: ${basic.ram}`, 'data-ram', dataTypingSpeed);
-            await typeWriterAsync(`Battery Diagnostics: ${batteryData}`, 'data-battery', dataTypingSpeed);
-            await typeWriterAsync(`Temporal Node: ${basic.tz.toUpperCase()}`, 'data-timezone', dataTypingSpeed);
-            await typeWriterAsync(`Network Protocol: ${basic.netType}`, 'data-nettype', dataTypingSpeed);
-            await typeWriterAsync(`Interface Mode: ${basic.handlesTouch}`, 'data-touch', dataTypingSpeed);
+            await typeWriterAsync(`Network IP: ${ipData}`, 'data-ip');
+            await typeWriterAsync(`Geographic Nodes: ${locData}`, 'data-loc');
+            await typeWriterAsync(`Local Weather: ${weatherData}`, 'data-weather');
+            await typeWriterAsync(`ISP Carrier: ${ipDataIsp}`, 'data-isp');
+            await typeWriterAsync(`Display Array: ${basic.screenRes}`, 'data-screen');
+            await typeWriterAsync(`Platform Core: ${basic.currentOS}`, 'data-os');
+            await typeWriterAsync(`Client Language: ${basic.lang}`, 'data-lang');
+            await typeWriterAsync(`Processing Cores: ${basic.cores} Threads Active`, 'data-cores');
+            await typeWriterAsync(`Estimated Memory: ${basic.ram}`, 'data-ram');
+            await typeWriterAsync(`Battery Diagnostics: ${batteryData}`, 'data-battery');
+            await typeWriterAsync(`Temporal Node: ${basic.tz.toUpperCase()}`, 'data-timezone');
+            await typeWriterAsync(`Network Protocol: ${basic.netType}`, 'data-nettype');
+            await typeWriterAsync(`Interface Mode: ${basic.handlesTouch}`, 'data-touch');
         });
 
         truthClose.addEventListener('click', () => {
             truthScreen.classList.remove('active');
-            track2.pause();
-            track1.play();
         });
+
+        // --- MATRIX RAIN ANIMATION ENGINE ---
+        let matrixInterval = null;
+        function toggleMatrixRain() {
+            const canvas = document.getElementById('matrix-canvas');
+            if (canvas.style.display === 'block') {
+                canvas.style.display = 'none';
+                clearInterval(matrixInterval);
+            } else {
+                canvas.style.display = 'block';
+                startMatrixRain();
+            }
+        }
+
+        function startMatrixRain() {
+            const canvas = document.getElementById('matrix-canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$%&*';
+            const fontSize = 14;
+            const columns = canvas.width / fontSize;
+            const drops = Array.from({ length: columns }).fill(1);
+
+            function draw() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = '#00ff66';
+                ctx.font = fontSize + 'px monospace';
+
+                for (let i = 0; i < drops.length; i++) {
+                    const text = chars.charAt(Math.floor(Math.random() * chars.length));
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
+                }
+            }
+
+            clearInterval(matrixInterval);
+            matrixInterval = setInterval(draw, 33);
+        }
     </script>
 </body>
 </html>
