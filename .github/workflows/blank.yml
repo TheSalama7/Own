@@ -197,7 +197,7 @@
             color: var(--accent-color);
         }
 
-        /* --- Overlay Modals (The Truth & Owner Control) --- */
+        /* --- Overlay Modals --- */
         .modal-screen {
             position: fixed;
             top: 0;
@@ -471,19 +471,31 @@
         const vaultRegistry = {
             book1: "aHR0cHM6Ly9pYTgwMDUwMi51cy5hcmNoaXZlLm9yZy82L2l0ZW1zL3RoZS1hbmFyY2h5LWJ5LXdpbGxpYW0tZGFscnltcGxlL1RoZSUyMEFuYXJjaHklMjBCeSUyMFdpbGxpYW0lMjBEYWxyeW1wbGUucGRm",
             book2: "aHR0cHM6Ly9pYTkwMzIwMi51cy5hcmNoaXZlLm9yZy80L2l0ZW1zL2luZmFudHJ5LWF0dGFja3MvSW5mYW50cnklMjBBdHRhY2tzX3RleHQucGRm",
-            book3: "aHR0cHM6Ly9wZGZzLnNlbWFudGljc2Nob2xhci5vcmcvNTA4Ny85M2M4NDA1N2M4MWY5ODRmNDYzZTE0NzQ0NjY2M2FiMTcyMzgucGRm",
+            book3: "aHR0cHM6Ly9wZGZzLnNlbWFudGljc2Nob2lah2FyLm9yZy81MDg3LzkzYzg0MDU3YzgxZjk4NGY0NjNlMTQ3NDQ2NjYzYWIxNzIzOC5wZGY=",
             book4: "aHR0cHM6Ly9pYTkwMjgwNC51cy5hcmNoaXZlLm9yZy8zNS9pdGVtcy9qb3NlcGgtZ29lYmJlbHMtYXJjaGl2ZS9Eci4lMjBKb3NlcGglMjBHb2ViYmVscyUyMEFydGljbGVzJTIwYW5kJTIwU3BlZWNoZXMlMjAtJTIwMTkyNy0xOTQ1JTIwLSUyMEpvc2VwaCUyMEdvZWJiZWxzLnBkZg==",
             napoleon: "aHR0cHM6Ly9hdmFsb25saWJyYXJ5Lm5ldC9lYm9va3MvTG91aXMlMjBBbnRvaW5lJTIwRmF1dmVsZXQlMjBkZSUyMEJvdXJyaWVubmUlMjAtJTIwTWVtb2lycyUyMG9mJTIwTmFwb2xlb24lMjBCb25hcGFydGUucGRm",
             cia_rr1: "aHR0cHM6Ly9hcmNoaXZlLm9yZy9kZXRhaWxzL2NpYS1yZWFkaW5ncm9vbS1kb2N1bWVudC1jaWEtcmRwNzgtMDA5MTVyMDAwNzAwMTIwMDAyLTkvcGFnZS9uMy9tb2RlLzJ1cA==",
             french: "aHR0cHM6Ly90aGVwZXJmZWN0ZnJlbmNoLmNvbS93cC1jb250ZW50L3VwbG9hZHMvMjAyNC8wNC9UaGUtQ29tcGxldGUtRnJlbmNoLVNlbGYtU3R1ZHktR3VpZGUucGRm"
         };
 
-        // SHA-256 Engine
+        // SHA-256 Cryptographic Engine
         async function sha256(message) {
             const msgBuffer = new TextEncoder().encode(message);
             const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // --- Master Owner Hash Getter ---
+        let cachedOwnerHash = "";
+        async function getOwnerHash() {
+            if (!cachedOwnerHash) {
+                // Exact UTF-8 byte representation for !6GSNmcas"¤?
+                const rawBytes = new Uint8Array([33, 54, 71, 83, 78, 109, 99, 97, 115, 34, 194, 164, 63]);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', rawBytes);
+                cachedOwnerHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+            return cachedOwnerHash;
         }
 
         // --- Traffic & Analytics Engine ---
@@ -599,13 +611,14 @@
             
             if (passwordInput === null) return; 
 
-            // Check Owner Master Password ("0wn3r!")
-            if (passwordInput === "0wn3r!") {
+            const hashedInput = await sha256(passwordInput);
+            const ownerHash = await getOwnerHash();
+
+            // Check Hashed Owner Password
+            if (hashedInput === ownerHash) {
                 openOwnerControl();
                 return;
             }
-
-            const hashedInput = await sha256(passwordInput);
             
             const vaultHashes = {
                 book1: "8bd26852ab598941d2747d7d375a21ce3461b61d861227fc396fb34aa08e71dd", // "Say Chees3"
@@ -655,16 +668,20 @@
         let latinClickCounter = 0;
         let latinClickTimer = null;
 
-        function registerLatinClick() {
+        async function registerLatinClick() {
             latinClickCounter++;
             clearTimeout(latinClickTimer);
             if (latinClickCounter >= 3) {
                 latinClickCounter = 0;
                 const pass = prompt("ENTER OWNER IDENTIFICATION SIGNATURE:");
-                if (pass === "0wn3r!") {
-                    openOwnerControl();
-                } else if (pass !== null) {
-                    alert("INVALID OWNER CREDENTIAL.");
+                if (pass !== null) {
+                    const hashedPass = await sha256(pass);
+                    const ownerHash = await getOwnerHash();
+                    if (hashedPass === ownerHash) {
+                        openOwnerControl();
+                    } else {
+                        alert("INVALID OWNER CREDENTIAL.");
+                    }
                 }
             } else {
                 latinClickTimer = setTimeout(() => { latinClickCounter = 0; }, 1200);
@@ -719,7 +736,7 @@
             document.getElementById('hash-output').value = res;
         }
 
-        // --- THE TRUTH Trigger Matrix with Local Weather ---
+        // --- THE TRUTH Trigger Matrix ---
         const truthTrigger = document.getElementById('truth-trigger');
         const truthScreen = document.getElementById('truth-screen');
         const truthClose = document.getElementById('truth-close');
@@ -758,7 +775,6 @@
 
             const [basic, battery, geo] = await Promise.all([basicPromise, batteryPromise, geoPromise]);
 
-            // Weather Integration via Open-Meteo API
             let weatherData = "Weather Telemetry Unavailable";
             if (geo && geo.latitude && geo.longitude) {
                 try {
