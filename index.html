@@ -1,1127 +1,720 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Hub</title>
-    <!-- Supabase CDN Client Library -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        /* --- Core Styling & Variables --- */
-        :root {
-            --bg-color: #0b0b0d;
-            --accent-color: #ff0055;
-            --text-color: #ffffff;
-            --truth-purple: #bf00ff;
-            --owner-green: #00ff66;
-            --alert-red: #ff3333;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SYSTEM // TERMINAL NODE</title>
+  
+  <!-- Supabase Client Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            overflow: hidden;
-            height: 100vh;
-            height: 100dvh;
-        }
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-        /* --- Matrix Rain Canvas --- */
-        #matrix-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-            opacity: 0.25;
-            display: none;
-        }
+    body {
+      background-color: #030507;
+      color: #00ff66;
+      font-family: 'Courier New', Courier, monospace;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
 
-        /* --- Main Page Layout --- */
-        .main-container {
-            position: relative;
-            width: 100%;
-            height: 100vh;
-            height: 100dvh;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            box-sizing: border-box;
-            padding: 2rem;
-            z-index: 1;
-        }
+    /* MATRIX CANVAS BACKGROUND */
+    #matrix-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -2;
+      opacity: 0.25;
+      pointer-events: none;
+    }
 
-        .top-row {
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
+    /* SCANLINE EFFECT OVERLAY */
+    .scanlines {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      background: linear-gradient(
+        rgba(18, 16, 16, 0) 50%, 
+        rgba(0, 0, 0, 0.25) 50%
+      ), linear-gradient(
+        90deg,
+        rgba(255, 0, 0, 0.03),
+        rgba(0, 255, 0, 0.01),
+        rgba(0, 0, 255, 0.03)
+      );
+      background-size: 100% 3px, 6px 100%;
+      pointer-events: none;
+    }
 
-        /* Hamburger Menu */
-        .menu-btn {
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            background: none;
-            border: none;
-            padding: 10px;
-            z-index: 10;
-        }
-        .menu-btn div {
-            width: 30px;
-            height: 3px;
-            background-color: var(--text-color);
-            transition: 0.3s;
-        }
+    .container {
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      z-index: 1;
+    }
 
-        /* Quotes Box */
-        .quote-box {
-            max-width: 300px;
-            text-align: right;
-            font-style: italic;
-            font-size: 0.95rem;
-            color: #aaaaaa;
-            line-height: 1.4;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 10px 15px;
-            border-radius: 8px;
-            border-right: 3px solid var(--accent-color);
-            min-height: 4.2rem;
-        }
+    header {
+      border-bottom: 2px solid #00ff66;
+      padding-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-        /* Center Button: THE TRUTH & Glitch */
-        .center-content {
-            text-align: center;
-        }
-        .truth-btn {
-            background: transparent;
-            color: var(--text-color);
-            border: 2px solid var(--text-color);
-            padding: 1.2rem 3rem;
-            font-size: 1.5rem;
-            font-weight: 900;
-            letter-spacing: 4px;
-            cursor: pointer;
-            border-radius: 0;
-            transition: all 0.3s ease;
-            position: relative;
-        }
+    h1 {
+      font-size: 1.4rem;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(0, 255, 102, 0.6);
+    }
 
-        @keyframes glitch {
-            0% { text-shadow: 1.5px -1.5px #ff0055, -1.5px 1.5px #bf00ff; }
-            30% { text-shadow: -1.5px 1.5px #ff0055, 1.5px -1.5px #bf00ff; }
-            60% { text-shadow: 1.5px 1.5px #ff0055, -1.5px -1.5px #bf00ff; }
-            100% { text-shadow: 0px 0px #ff0055, 0px 0px #bf00ff; }
-        }
+    /* SFX TOGGLE BUTTON */
+    .audio-toggle {
+      background: transparent;
+      border: 1px solid #00ff66;
+      color: #00ff66;
+      font-family: inherit;
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      cursor: pointer;
+      border-radius: 3px;
+    }
 
-        .truth-btn:hover {
-            color: var(--accent-color);
-            border-color: var(--accent-color);
-            box-shadow: 0 0 20px rgba(255, 0, 85, 0.4);
-            transform: scale(1.03);
-            animation: glitch 0.25s infinite linear;
-        }
+    .audio-toggle:hover {
+      background: rgba(0, 255, 102, 0.2);
+    }
 
-        /* Social Links */
-        .socials-box {
-            display: flex;
-            gap: 2rem;
-            margin-bottom: 1rem;
-        }
-        .socials-box a {
-            color: var(--text-color);
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1.1rem;
-            opacity: 0.7;
-            transition: opacity 0.2s, color 0.2s;
-        }
-        .socials-box a:hover {
-            opacity: 1;
-            color: var(--accent-color);
-        }
+    /* CARD STYLING */
+    .card {
+      background: rgba(9, 13, 16, 0.92);
+      border: 1px solid #00ff66;
+      box-shadow: 0 0 15px rgba(0, 255, 102, 0.15);
+      border-radius: 4px;
+      padding: 16px;
+      backdrop-filter: blur(4px);
+    }
 
-        /* Bottom Left Corner Latin Text */
-        .latin-text {
-            position: absolute;
-            bottom: 2rem;
-            left: 2rem;
-            font-size: 0.8rem;
-            color: #444446;
-            font-family: 'Courier New', Courier, monospace;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            user-select: none;
-            cursor: pointer;
-            min-width: 12rem;
-        }
+    .card-title {
+      font-weight: bold;
+      color: #00e5ff;
+      margin-bottom: 12px;
+      display: block;
+      border-bottom: 1px dashed rgba(0, 229, 255, 0.3);
+      padding-bottom: 5px;
+      font-size: 0.9rem;
+      letter-spacing: 1px;
+    }
 
-        /* --- Sidebar Navigation --- */
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 280px;
-            height: 100%;
-            background-color: #121214;
-            box-shadow: 5px 0 15px rgba(0,0,0,0.7);
-            transform: translateX(-100%);
-            transition: transform 0.4s cubic-bezier(0.77,0.2,0.05,1.0);
-            z-index: 5;
-            padding: 6rem 2rem 2rem 2rem;
-            box-sizing: border-box;
-        }
-        .sidebar.open {
-            transform: translateX(0);
-        }
-        .sidebar h3 {
-            border-bottom: 1px solid #29292e;
-            padding-bottom: 0.5rem;
-            color: var(--accent-color);
-            margin-bottom: 1rem;
-        }
-        .vault-item {
-            display: block;
-            margin: 1.2rem 0;
-            color: #cccccc;
-            text-decoration: none;
-            font-weight: 600;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        .vault-item:hover {
-            color: var(--accent-color);
-        }
+    /* BUTTONS */
+    .btn {
+      background: #00ff66;
+      color: #000;
+      border: none;
+      padding: 10px 16px;
+      font-family: inherit;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.2s ease;
+      letter-spacing: 1px;
+    }
 
-        /* --- Overlay Modals --- */
-        .modal-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 20;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.4s ease;
-            background: radial-gradient(circle at center, #1b002c 0%, #000000 100%);
-            overflow-y: auto;
-            padding: 1rem 0;
-            box-sizing: border-box;
-        }
-        .modal-screen.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        
-        .truth-content {
-            background: rgba(13, 13, 15, 0.95);
-            border: 1px solid #222;
-            padding: 2.5rem;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 580px;
-            box-shadow: 0 0 50px rgba(191, 0, 255, 0.2);
-            color: var(--truth-purple); 
-        }
-        .truth-content h2 {
-            color: #ff3333;
-            margin-top: 0;
-            font-size: 1.6rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            border-bottom: 1px solid #222;
-            padding-bottom: 1rem;
-            text-align: center;
-        }
+    .btn:hover {
+      background: #00e5ff;
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.6);
+    }
 
-        .data-list {
-            text-align: left;
-            margin-top: 1.2rem;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 0.5rem;
-        }
-        .data-row {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.95rem;
-            color: var(--truth-purple);
-            border-bottom: 1px dashed rgba(191, 0, 255, 0.15);
-            padding-bottom: 4px;
-            min-height: 1.4rem;
-        }
+    /* TELEMETRY DISPLAY */
+    #truth-display {
+      margin-top: 15px;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: #a3ffcc;
+      display: none;
+      white-space: pre-wrap;
+      background: #000;
+      padding: 12px;
+      border: 1px solid #005522;
+    }
 
-        /* --- OWNER CONTROL CENTER STYLING --- */
-        .owner-content {
-            background: rgba(10, 15, 12, 0.97);
-            border: 1px solid var(--owner-green);
-            padding: 2rem;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 720px;
-            max-height: 85vh;
-            overflow-y: auto;
-            box-shadow: 0 0 40px rgba(0, 255, 102, 0.25);
-            color: var(--owner-green);
-            font-family: 'Courier New', Courier, monospace;
-        }
-        .owner-content h2 {
-            color: var(--owner-green);
-            margin-top: 0;
-            font-size: 1.4rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            border-bottom: 1px solid rgba(0, 255, 102, 0.3);
-            padding-bottom: 0.8rem;
-            text-align: center;
-        }
-        .owner-section {
-            margin: 1.2rem 0;
-            background: rgba(0, 255, 102, 0.03);
-            padding: 1rem;
-            border-radius: 6px;
-            border-left: 3px solid var(--owner-green);
-        }
-        .owner-section h4 {
-            margin: 0 0 0.6rem 0;
-            color: #ffffff;
-            font-size: 0.95rem;
-            text-transform: uppercase;
-        }
-        .owner-btn {
-            background: transparent;
-            color: var(--owner-green);
-            border: 1px solid var(--owner-green);
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-            font-family: 'Courier New', Courier, monospace;
-            font-weight: bold;
-            transition: all 0.2s;
-            margin-top: 0.5rem;
-            margin-right: 0.4rem;
-        }
-        .owner-btn:hover {
-            background: var(--owner-green);
-            color: #000000;
-        }
-        .owner-btn-danger {
-            color: var(--alert-red);
-            border-color: var(--alert-red);
-        }
-        .owner-btn-danger:hover {
-            background: var(--alert-red);
-            color: #ffffff;
-        }
-        .owner-input {
-            width: 100%;
-            background: #000;
-            border: 1px solid rgba(0, 255, 102, 0.4);
-            color: var(--owner-green);
-            padding: 0.5rem;
-            box-sizing: border-box;
-            font-family: 'Courier New', Courier, monospace;
-            margin-top: 0.4rem;
-        }
+    /* TERMINAL CHAT */
+    .chat-header {
+      background: rgba(0, 255, 102, 0.1);
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #00ff66;
+      font-size: 0.85rem;
+      font-weight: bold;
+      margin: -16px -16px 12px -16px;
+    }
 
-        .log-box {
-            background: #000000;
-            border: 1px solid #1a3a22;
-            padding: 0.8rem;
-            max-height: 140px;
-            overflow-y: auto;
-            font-size: 0.82rem;
-            color: #88ffaa;
-            margin-top: 0.5rem;
-            border-radius: 4px;
-        }
+    .chat-status {
+      color: #00e5ff;
+    }
 
-        .close-btn {
-            display: block;
-            margin: 1.5rem auto 0 auto;
-            background: #ff3333;
-            color: white;
-            border: none;
-            padding: 0.6rem 2rem;
-            cursor: pointer;
-            font-weight: bold;
-            border-radius: 4px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+    #chat-messages {
+      height: 220px;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: rgba(0, 0, 0, 0.9);
+      border: 1px solid #005522;
+      margin-bottom: 10px;
+    }
 
-        /* --- Ban & Lockdown Layers --- */
-        .ban-screen {
-            position: fixed;
-            top:0; left:0; width:100%; height:100%;
-            background: #000000;
-            color: #ff3333;
-            z-index: 9999;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Courier New', Courier, monospace;
-            text-align: center;
-            padding: 2rem;
-            box-sizing: border-box;
-        }
-        .ban-screen h1 { 
-            font-size: 2.8rem; 
-            letter-spacing: 4px; 
-            margin-bottom: 10px; 
-            animation: glitch 0.3s infinite linear;
-        }
+    .chat-msg {
+      font-size: 0.85rem;
+      line-height: 1.3;
+      word-break: break-word;
+    }
 
-        /* Responsive Adjustments */
-        @media (max-width: 600px) {
-            .main-container { padding: 1.2rem; }
-            .quote-box { max-width: 68%; font-size: 0.78rem; padding: 6px 10px; min-height: 3.8rem; }
-            .truth-btn { padding: 1rem 2rem; font-size: 1.15rem; letter-spacing: 2px; }
-            .socials-box { gap: 1.5rem; margin-bottom: 2.5rem; }
-            .latin-text { bottom: 0.6rem; left: 50%; transform: translateX(-50%); text-align: center; font-size: 0.7rem; width: 100%; }
-            .truth-content, .owner-content { padding: 1.2rem; width: 95%; }
-            .data-row { font-size: 0.75rem; word-break: break-all; }
-        }
-    </style>
+    .chat-msg .timestamp {
+      color: #555;
+      font-size: 0.75rem;
+      margin-right: 6px;
+    }
+
+    .chat-msg .sender {
+      color: #00e5ff;
+      font-weight: bold;
+      margin-right: 6px;
+    }
+
+    .chat-msg.system {
+      color: #ffaa00;
+      font-style: italic;
+    }
+
+    #chat-form {
+      display: flex;
+      align-items: center;
+      border: 1px solid #00ff66;
+      background: #000;
+      padding: 6px 10px;
+      gap: 8px;
+    }
+
+    #chat-user-alias {
+      color: #00e5ff;
+      font-size: 0.85rem;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    #chat-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #00ff66;
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+
+    #chat-send-btn {
+      width: auto;
+      padding: 4px 12px;
+      font-size: 0.8rem;
+    }
+
+    /* SECRET VAULT STYLING */
+    .vault-inputs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    #vault-pass-input {
+      flex: 1;
+      background: #000;
+      border: 1px solid #00ff66;
+      color: #00ff66;
+      padding: 8px 12px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    #vault-content {
+      display: none;
+      background: #000;
+      border: 1px solid #ffaa00;
+      padding: 12px;
+      margin-top: 10px;
+      color: #ffaa00;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+
+    /* OWNER PANEL MODAL */
+    #owner-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.92);
+      z-index: 999;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    #owner-modal-content {
+      max-width: 800px;
+      margin: 40px auto;
+      background: #090d10;
+      border: 1px solid #ff0055;
+      padding: 20px;
+      box-shadow: 0 0 25px rgba(255, 0, 85, 0.35);
+    }
+
+    .owner-header {
+      color: #ff0055;
+      font-weight: bold;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .close-btn {
+      color: #ff0055;
+      cursor: pointer;
+    }
+
+    /* FOOTER TRIGGER */
+    footer {
+      margin-top: auto;
+      text-align: left;
+      width: 100%;
+      max-width: 680px;
+      padding: 15px 0 5px 0;
+      z-index: 1;
+    }
+
+    #secret-trigger {
+      color: #1a3324;
+      font-size: 0.75rem;
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.3s ease;
+    }
+
+    #secret-trigger:hover {
+      color: #00ff66;
+    }
+  </style>
 </head>
 <body>
 
-    <canvas id="matrix-canvas"></canvas>
+  <!-- MATRIX BACKGROUND & SCANLINES -->
+  <canvas id="matrix-canvas"></canvas>
+  <div class="scanlines"></div>
 
-    <!-- BAN SCREEN -->
-    <div id="ban-layer" class="ban-screen">
-        <h1>ACCESS DENIED</h1>
-        <p id="ban-message">YOUR NETWORK NODE HAS BEEN FLAGGED AND RESTRICTED DUE TO SECURITY VIOLATIONS.</p>
-        <p style="color: #444; font-size: 0.8rem; margin-top: 2rem;">Security Threat Code: 3_FAILED_INTRUSION_ATTEMPTS</p>
+  <div class="container">
+    <header>
+      <h1>SYSTEM // TERMINAL NODE</h1>
+      <button class="audio-toggle" id="sfx-toggle">AUDIO: ON</button>
+    </header>
+
+    <!-- REAL-TIME CHAT WIDGET -->
+    <div class="card" id="hacker-chat-container">
+      <div class="chat-header">
+        <span class="chat-title">> LIVE_NODE_NETWORK // CHAT</span>
+        <span class="chat-status"><span id="online-count">1</span> NODE(S) ONLINE</span>
+      </div>
+      <div id="chat-messages"></div>
+      <form id="chat-form">
+        <span id="chat-user-alias">Node_????:</span>
+        <input type="text" id="chat-input" placeholder="Type message..." autocomplete="off" maxlength="250" required>
+        <button type="submit" class="btn" id="chat-send-btn">SEND</button>
+      </form>
     </div>
 
-    <!-- LOCKDOWN SCREEN -->
-    <div id="lockdown-layer" class="ban-screen" style="color: #ffaa00;">
-        <h1>NODE IN LOCKDOWN</h1>
-        <p>SYSTEM IS CURRENTLY IN EMERGENCY MAINTENANCE & LOCKDOWN MODE.</p>
-        <p style="color: #666; font-size: 0.8rem; margin-top: 2rem;">Status Code: 503_SERVICE_UNAVAILABLE</p>
+    <!-- SECRET CLASSIFIED VAULT -->
+    <div class="card">
+      <span class="card-title">> CLASSIFIED VAULT [LEVEL 1 ACCESS]</span>
+      <div class="vault-inputs">
+        <input type="password" id="vault-pass-input" placeholder="ENTER ACCESS CODE (Hint: 1337)" autocomplete="off">
+        <button class="btn" id="vault-unlock-btn" style="width: 120px;">UNLOCK</button>
+      </div>
+      <div id="vault-content">
+        [CLASSIFIED FILE #881-B UNLOCKED]<br><br>
+        > "Project CyberGrip online. Node authentication verified."<br>
+        > Encrypted Vault Flag: <code>FLAG{S3CR3T_TRUTH_N0D3_2026}</code><br><br>
+        Welcome back, Operator.
+      </div>
     </div>
 
-    <div class="main-container" id="app-content">
-        
-        <div class="top-row">
-            <button class="menu-btn" onclick="toggleSidebar(event)">
-                <div></div>
-                <div></div>
-                <div></div>
-            </button>
-            <div class="quote-box" id="quote-display"></div>
-        </div>
-
-        <div class="center-content">
-            <button class="truth-btn" id="truth-trigger">THE TRUTH</button>
-        </div>
-
-        <div class="socials-box">
-            <a href="https://www.instagram.com/jere.nieminen0/" target="_blank">Instagram</a>
-            <a href="https://open.spotify.com/playlist/2EfjMAbzXUENilT8AemW34" target="_blank">Spotify</a>
-        </div>
-
-        <div class="latin-text" id="latin-display" onclick="registerLatinClick()"></div>
+    <!-- THE TRUTH BUTTON & TELEMETRY -->
+    <div class="card">
+      <span class="card-title">> LOCAL NODE TELEMETRY</span>
+      <button class="btn" id="truth-btn">THE TRUTH</button>
+      <div id="truth-display"></div>
     </div>
+  </div>
 
-    <div id="sidebar" class="sidebar">
-        <h3>Hidden Vault</h3>
-        <div class="vault-item" onclick="accessVault('book1', true)">Book-1</div>
-        <div class="vault-item" onclick="accessVault('book2', true)">Book-2</div>
-        <div class="vault-item" onclick="accessVault('book3', true)">Book-3</div>
-        <div class="vault-item" onclick="accessVault('book4', true)">Book-4</div>
-        <div class="vault-item" onclick="accessVault('napoleon', false)">Napoleon the Great</div>
-        <div class="vault-item" onclick="accessVault('cia_rr1', true)">Cia RR-1</div>
-        <div class="vault-item" onclick="accessVault('french', false)">The French</div>
+  <footer>
+    <span id="secret-trigger">Deus est veritas</span>
+  </footer>
+
+  <!-- OWNER CONTROL PANEL MODAL -->
+  <div id="owner-modal">
+    <div id="owner-modal-content">
+      <div class="owner-header">
+        <span>> OWNER TERMINAL // GLOBAL VISITOR LOGS</span>
+        <span class="close-btn" id="close-owner-btn">[X] CLOSE</span>
+      </div>
+      <button class="btn" id="refresh-logs-btn" style="margin-bottom: 15px;">REFRESH GLOBAL LOGS</button>
+      <div id="logs-output" style="font-size: 0.75rem; color: #00e5ff; white-space: pre-wrap; background: #000; padding: 10px; border: 1px solid #ff0055; max-height: 400px; overflow-y: auto;">
+        Click refresh to fetch telemetry data...
+      </div>
     </div>
+  </div>
 
-    <!-- THE TRUTH SCREEN -->
-    <div id="truth-screen" class="modal-screen">
-        <div class="truth-content">
-            <h2>YOU ARE DONE</h2>
+  <script>
+    // ==========================================
+    // 1. SUPABASE INITIALIZATION
+    // ==========================================
+    const SUPABASE_URL = 'https://layliixcwdixallmjlyo.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_b-Yz4UX55E-yonBwmQOyKw_U9gSqqPO';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-            <div class="data-list">
-                <div class="data-row"><span id="data-ip"></span></div>
-                <div class="data-row"><span id="data-loc"></span></div>
-                <div class="data-row"><span id="data-weather"></span></div>
-                <div class="data-row"><span id="data-isp"></span></div>
-                <div class="data-row"><span id="data-screen"></span></div>
-                <div class="data-row"><span id="data-os"></span></div>
-                <div class="data-row"><span id="data-lang"></span></div>
-                <div class="data-row"><span id="data-cores"></span></div>
-                <div class="data-row"><span id="data-ram"></span></div>
-                <div class="data-row"><span id="data-battery"></span></div>
-                <div class="data-row"><span id="data-timezone"></span></div>
-                <div class="data-row"><span id="data-nettype"></span></div>
-                <div class="data-row"><span id="data-touch"></span></div>
-            </div>
-            <button class="close-btn" id="truth-close">Escape</button>
-        </div>
-    </div>
+    let clientIPData = null;
+    let sfxEnabled = true;
 
-    <!-- OWNER CONTROL CENTER -->
-    <div id="owner-screen" class="modal-screen">
-        <div class="owner-content">
-            <h2>[ ROOT CLEARANCE // OWNER CONTROL ]</h2>
-            
-            <div class="owner-section">
-                <h4>🌐 Global Visitor IP Database (Supabase)</h4>
-                <button class="owner-btn" onclick="loadVisitorLogs()">REFRESH GLOBAL LOGS</button>
-                <div id="visitor-log-table" style="margin-top:0.8rem; max-height:220px; overflow-y:auto; background:#000; padding:8px; border:1px solid #1a3a22;">
-                    <em>Click button to load live visitor IP records...</em>
-                </div>
-            </div>
+    // ==========================================
+    // 2. SYNTHESIZED WEB AUDIO SFX ENGINE
+    // ==========================================
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
 
-            <div class="owner-section">
-                <h4>📊 Local Device Analytics</h4>
-                <div id="owner-traffic-stats">Loading metrics...</div>
-            </div>
+    function playSound(type) {
+      if (!sfxEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new AudioContext();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
 
-            <div class="owner-section">
-                <h4>🔎 IP Intelligence & Lookup Tool</h4>
-                <small style="color: #888;">Inspect any IP address to pull geolocation and ISP details:</small>
-                <input type="text" id="ip-lookup-input" class="owner-input" placeholder="e.g. 8.8.8.8 or leave empty for self...">
-                <button class="owner-btn" onclick="lookupIP()">QUERY IP DATA</button>
-                <div id="ip-lookup-output" style="margin-top: 0.6rem; font-size: 0.85rem; color: #aaffcc;"></div>
-            </div>
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
 
-            <div class="owner-section">
-                <h4>📜 System Event Audit Log</h4>
-                <small style="color: #888;">Local audit trail of user actions & security warnings:</small>
-                <div id="security-event-log" class="log-box"></div>
-                <button class="owner-btn" onclick="clearEventLogs()">Clear Event Audit</button>
-            </div>
+        const now = audioCtx.currentTime;
 
-            <div class="owner-section">
-                <h4>🛡️ Security Override & Lockdown</h4>
-                <div>Failed Intrusions Logged: <span id="owner-failed-attempts">0</span> / 3</div>
-                <button class="owner-btn" onclick="clearBansAndReset()">UNBAN & RESET STRIKES</button>
-                <button class="owner-btn owner-btn-danger" id="lockdown-toggle-btn" onclick="toggleLockdown()">TOGGLE SITE LOCKDOWN</button>
-            </div>
+        if (type === 'click') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(800, now);
+          osc.frequency.exponentialRampToValueAtTime(400, now + 0.04);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.04);
+          osc.start(now);
+          osc.stop(now + 0.04);
+        } else if (type === 'msg') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(520, now);
+          osc.frequency.setValueAtTime(880, now + 0.05);
+          gain.gain.setValueAtTime(0.06, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+          osc.start(now);
+          osc.stop(now + 0.1);
+        } else if (type === 'access_granted') {
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.setValueAtTime(880, now + 0.1);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+          osc.start(now);
+          osc.stop(now + 0.25);
+        } else if (type === 'access_denied') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(180, now);
+          osc.frequency.setValueAtTime(110, now + 0.1);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+          osc.start(now);
+          osc.stop(now + 0.2);
+        }
+      } catch (e) {}
+    }
 
-            <div class="owner-section">
-                <h4>🔑 SHA-256 Hash Generator</h4>
-                <input type="text" id="hash-input" class="owner-input" placeholder="Enter plain password..." oninput="generateQuickHash()">
-                <input type="text" id="hash-output" class="owner-input" placeholder="SHA-256 result..." readonly style="color: #00ff66;">
-            </div>
+    document.getElementById('sfx-toggle').addEventListener('click', (e) => {
+      sfxEnabled = !sfxEnabled;
+      e.target.textContent = `AUDIO: ${sfxEnabled ? 'ON' : 'OFF'}`;
+      if (sfxEnabled) playSound('click');
+    });
 
-            <div class="owner-section">
-                <h4>💻 Visual Enhancement</h4>
-                <button class="owner-btn" onclick="toggleMatrixRain()">TOGGLE MATRIX RAIN</button>
-            </div>
+    // ==========================================
+    // 3. MATRIX RAIN CANVAS ANIMATION
+    // ==========================================
+    (function initMatrix() {
+      const canvas = document.getElementById('matrix-canvas');
+      const ctx = canvas.getContext('2d');
 
-            <button class="close-btn" onclick="closeOwnerControl()">Exit Terminal</button>
-        </div>
-    </div>
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
 
-    <script>
-        // --- SUPABASE CONFIGURATION ---
-        const SUPABASE_URL = 'https://layliixcwdixallmjlyo.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_b-Yz4UX55E-yonBwmQOyKw_U9gSqqPO';
+      const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*';
+      const fontSize = 14;
+      let columns = Math.floor(canvas.width / fontSize);
+      let drops = Array(columns).fill(1);
 
-        let supabaseClient = null;
+      function drawMatrix() {
+        ctx.fillStyle = 'rgba(3, 5, 7, 0.08)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = '#00ff66';
+        ctx.font = `${fontSize}px monospace`;
+
+        if (drops.length !== Math.floor(canvas.width / fontSize)) {
+          columns = Math.floor(canvas.width / fontSize);
+          drops = Array(columns).fill(1);
+        }
+
+        for (let i = 0; i < drops.length; i++) {
+          const text = chars[Math.floor(Math.random() * chars.length)];
+          ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+          if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+            drops[i] = 0;
+          }
+          drops[i]++;
+        }
+      }
+      setInterval(drawMatrix, 35);
+    })();
+
+    // ==========================================
+    // 4. BACKGROUND TELEMETRY & VISITOR LOGGING
+    // ==========================================
+    async function logVisitor() {
+      try {
+        const ipRes = await fetch('https://ipapi.co/json/');
+        clientIPData = await ipRes.json();
+
+        await supabase.from('visitor_logs').insert([
+          {
+            ip: clientIPData.ip,
+            location: `${clientIPData.city}, ${clientIPData.region}, ${clientIPData.country_name}`,
+            isp: clientIPData.org,
+            user_agent: navigator.userAgent
+          }
+        ]);
+      } catch (err) {
+        console.warn('Telemetry log skipped:', err);
+      }
+    }
+    logVisitor();
+
+    // ==========================================
+    // 5. "THE TRUTH" BUTTON HANDLER
+    // ==========================================
+    document.getElementById('truth-btn').addEventListener('click', async () => {
+      playSound('click');
+      const display = document.getElementById('truth-display');
+      display.style.display = 'block';
+      display.textContent = 'Gathering client telemetry...';
+
+      let batteryInfo = 'N/A';
+      if (navigator.getBattery) {
         try {
-            if (typeof supabase !== 'undefined') {
-                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            }
-        } catch(e) { console.log('Supabase init error:', e); }
+          const batt = await navigator.getBattery();
+          batteryInfo = `${Math.round(batt.level * 100)}% (${batt.charging ? 'Charging' : 'Discharging'})`;
+        } catch (e) {}
+      }
 
-        // Send visitor IP to Supabase on Page Load
-        async function recordVisitorLog() {
-            if (!supabaseClient || sessionStorage.getItem('log_recorded')) return;
+      const info = [
+        `[IP ADDRESS]   : ${clientIPData?.ip || 'Detecting...'}`,
+        `[LOCATION]     : ${clientIPData ? `${clientIPData.city}, ${clientIPData.region}, ${clientIPData.country_name}` : 'Unknown'}`,
+        `[ISP / HOST]   : ${clientIPData?.org || 'Unknown'}`,
+        `[OPERATING SYS]: ${navigator.platform}`,
+        `[USER AGENT]   : ${navigator.userAgent}`,
+        `[SCREEN RES]   : ${window.screen.width}x${window.screen.height}`,
+        `[BATTERY]      : ${batteryInfo}`,
+        `[TOUCH POINTS] : ${navigator.maxTouchPoints}`,
+        `[TIMEZONE]     : ${Intl.DateTimeFormat().resolvedOptions().timeZone}`
+      ];
 
-            try {
-                const geoRes = await fetch('https://ipapi.co/json/').then(r => r.json());
-                const ip = geoRes.ip || 'Unknown';
-                const location = `${geoRes.city || ''}, ${geoRes.country_name || ''}`;
-                const isp = geoRes.org || 'Unknown';
+      display.textContent = info.join('\n');
+    });
 
-                const { error } = await supabaseClient
-                    .from('visitor_logs')
-                    .insert([{ ip, location, isp, user_agent: navigator.userAgent }]);
+    // ==========================================
+    // 6. REAL-TIME TERMINAL CHAT
+    // ==========================================
+    (function initHackerChat() {
+      const myAlias = `Node_${Math.floor(1000 + Math.random() * 9000)}`;
+      document.getElementById('chat-user-alias').textContent = `${myAlias}:`;
 
-                if (!error) {
-                    sessionStorage.setItem('log_recorded', 'true');
-                }
-            } catch (err) {
-                console.log('Telemetry collection bypassed.');
-            }
-        }
-        recordVisitorLog();
+      const messagesContainer = document.getElementById('chat-messages');
+      const chatForm = document.getElementById('chat-form');
+      const chatInput = document.getElementById('chat-input');
+      const onlineCountEl = document.getElementById('online-count');
 
-        // Fetch & Display Visitor Logs in Owner Panel
-        async function loadVisitorLogs() {
-            const tableContainer = document.getElementById('visitor-log-table');
-            if (!supabaseClient) {
-                tableContainer.innerHTML = '<span style="color:#ff3333;">Error: Supabase client initialization failed.</span>';
-                return;
-            }
+      function appendMessage(sender, text, isSystem = false) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `chat-msg ${isSystem ? 'system' : ''}`;
+        const timeStr = new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-            tableContainer.innerHTML = 'Querying Supabase cluster...';
-
-            const { data, error } = await supabaseClient
-                .from('visitor_logs')
-                .select('*')
-                .order('timestamp', { ascending: false })
-                .limit(25);
-
-            if (error || !data) {
-                tableContainer.innerHTML = `<span style="color:#ff3333;">Failed to load logs: ${error ? error.message : 'No data'}</span>`;
-                return;
-            }
-
-            if (data.length === 0) {
-                tableContainer.innerHTML = '<em>No visitors recorded yet in database.</em>';
-                return;
-            }
-
-            let html = `
-                <table style="width:100%; font-size:0.78rem; border-collapse:collapse; text-align:left;">
-                    <tr style="border-bottom: 1px solid #00ff66; color: #ffffff;">
-                        <th style="padding:4px;">Time</th>
-                        <th style="padding:4px;">IP Address</th>
-                        <th style="padding:4px;">Location</th>
-                        <th style="padding:4px;">ISP</th>
-                    </tr>
-            `;
-
-            data.forEach(row => {
-                const time = new Date(row.timestamp).toLocaleTimeString();
-                html += `
-                    <tr style="border-bottom: 1px dashed rgba(0,255,102,0.2);">
-                        <td style="padding:4px; color:#888;">${time}</td>
-                        <td style="padding:4px; color:#00ff66;"><strong>${row.ip}</strong></td>
-                        <td style="padding:4px;">${row.location}</td>
-                        <td style="padding:4px; color:#aaa;">${row.isp}</td>
-                    </tr>
-                `;
-            });
-
-            html += '</table>';
-            tableContainer.innerHTML = html;
+        if (isSystem) {
+          msgDiv.innerHTML = `<span class="timestamp">[${timeStr}]</span> ${text}`;
+        } else {
+          msgDiv.innerHTML = `<span class="timestamp">[${timeStr}]</span><span class="sender">${sender}:</span>${escapeHTML(text)}`;
         }
 
-        // --- Vault Obfuscation Registry ---
-        const vaultRegistry = {
-            book1: "aHR0cHM6Ly9pYTgwMDUwMi51cy5hcmNoaXZlLm9yZy82L2l0ZW1zL3RoZS1hbmFyY2h5LWJ5LXdpbGxpYW0tZGFscnltcGxlL1RoZSUyMEFuYXJjaHklMjBCeSUyMFdpbGxpYW0lMjBEYWxyeW1wbGUucGRm",
-            book2: "aHR0cHM6Ly9pYTkwMzIwMi51cy5hcmNoaXZlLm9yZy80L2l0ZW1zL2luZmFudHJ5LWF0dGFja3MvSW5mYW50cnklMjBBdHRhY2tzX3RleHQucGRm",
-            book3: "aHR0cHM6Ly9wZGZzLnNlbWFudGljc2Nob2lah2FyLm9yZy85MDg3LzkzYzg0MDU3YzgxZjk4NGY0NjNlMTQ3NDQ2NjYzYWIxNzIzOC5wZGY=",
-            book4: "aHR0cHM6Ly9pYTkwMjgwNC51cy5hcmNoaXZlLm9yZy8zNS9pdGVtcy9qb3NlcGgtZ29lYmJlbHMtYXJjaGl2ZS9Eci4lMjBKb3NlcGglMjBHb2ViYmVscyUyMEFydGljbGVzJTIwYW5kJTIwU3BlZWNoZXMlMjAtJTIwMTkyNy0xOTQ1JTIwLSUyMEpvc2VwaCUyMEdvZWJiZWxzLnBkZg==",
-            napoleon: "aHR0cHM6Ly9hdmFsb25saWJyYXJ5Lm5ldC9lYm9va3MvTG91aXMlMjBBbnRvaW5lJTIwRmF1dmVsZXQlMjBkZSUyMEJvdXJyaWVubmUlMjAtJTIwTWVtb2lycyUyMG9mJTIwTmFwb2xlb24lMjBCb25hcGFydGUucGRm",
-            cia_rr1: "aHR0cHM6Ly9hcmNoaXZlLm9yZy9kZXRhaWxzL2NpYS1yZWFkaW5ncm9vbS1kb2N1bWVudC1jaWEtcmRwNzgtMDA5MTVyMDAwNzAwMTIwMDAyLTkvcGFnZS9uMy9tb2RlLzJ1cA==",
-            french: "aHR0cHM6Ly90aGVwZXJmZWN0ZnJlbmNoLmNvbS93cC1jb250ZW50L3VwbG9hZHMvMjAyNC8wNC9UaGUtQ29tcGxldGUtRnJlbmNoLVNlbGYtU3R1ZHktR3VpZGUucGRm"
-        };
+        messagesContainer.appendChild(msgDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        if (!isSystem) playSound('msg');
+      }
 
-        // SHA-256 Cryptographic Engine
-        async function sha256(message) {
-            const msgBuffer = new TextEncoder().encode(message);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+      }
+
+      const chatChannel = supabase.channel('global_terminal_chat', {
+        config: {
+          broadcast: { self: true },
+          presence: { key: myAlias },
+        },
+      });
+
+      chatChannel.on('broadcast', { event: 'message' }, ({ payload }) => {
+        appendMessage(payload.sender, payload.text);
+      });
+
+      chatChannel.on('presence', { event: 'sync' }, () => {
+        const state = chatChannel.presenceState();
+        onlineCountEl.textContent = Object.keys(state).length;
+      });
+
+      chatChannel.on('presence', { event: 'join' }, ({ newPresences }) => {
+        newPresences.forEach(p => {
+          if (p.key !== myAlias) {
+            appendMessage('SYSTEM', `${p.key} connected.`, true);
+          }
+        });
+      });
+
+      chatChannel.on('presence', { event: 'leave' }, ({ leftPresences }) => {
+        leftPresences.forEach(p => {
+          appendMessage('SYSTEM', `${p.key} disconnected.`, true);
+        });
+      });
+
+      chatChannel.subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await chatChannel.track({ onlineAt: new Date().toISOString() });
+          appendMessage('SYSTEM', `Connected to node network as ${myAlias}.`, true);
         }
+      });
 
-        // --- Owner Hash Getter ---
-        let cachedOwnerHash = "";
-        async function getOwnerHash() {
-            if (!cachedOwnerHash) {
-                const rawBytes = new Uint8Array([33, 54, 71, 83, 78, 109, 99, 97, 115, 34, 194, 164, 63]);
-                const hashBuffer = await crypto.subtle.digest('SHA-256', rawBytes);
-                cachedOwnerHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-            }
-            return cachedOwnerHash;
-        }
+      chatForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = chatInput.value.trim();
+        if (!text) return;
 
-        // --- System Logging Helper ---
-        function logSystemEvent(description) {
-            let logs = JSON.parse(localStorage.getItem('system_event_logs') || '[]');
-            const timestamp = new Date().toLocaleTimeString();
-            logs.unshift(`[${timestamp}] ${description}`);
-            if (logs.length > 30) logs.pop();
-            localStorage.setItem('system_event_logs', JSON.stringify(logs));
-        }
-
-        // --- Traffic & Analytics Engine ---
-        function initTrafficTracker() {
-            let visits = parseInt(localStorage.getItem('traffic_visits') || '0') + 1;
-            localStorage.setItem('traffic_visits', visits);
-
-            if (!sessionStorage.getItem('session_counted')) {
-                let sessions = parseInt(localStorage.getItem('traffic_sessions') || '0') + 1;
-                localStorage.setItem('traffic_sessions', sessions);
-                sessionStorage.setItem('session_counted', 'true');
-                
-                const ref = document.referrer || 'Direct Link / Bookmark';
-                let refs = JSON.parse(localStorage.getItem('traffic_referrers') || '{}');
-                refs[ref] = (refs[ref] || 0) + 1;
-                localStorage.setItem('traffic_referrers', JSON.stringify(refs));
-
-                logSystemEvent(`New Session Started (Source: ${ref})`);
-            }
-
-            localStorage.setItem('traffic_last_visit', new Date().toLocaleString());
-        }
-        initTrafficTracker();
-
-        // --- Core Typewriter Engines ---
-        async function typeWriterAsync(text, elementId, speed = 35) {
-            return new Promise((resolve) => {
-                let i = 0;
-                const elem = document.getElementById(elementId);
-                if (elem) {
-                    elem.textContent = ""; 
-                    elem.style.visibility = "visible";
-                }
-                function type() {
-                    if (elem && i < text.length) {
-                        elem.textContent += text.charAt(i);
-                        i++;
-                        setTimeout(type, speed);
-                    } else {
-                        resolve();
-                    }
-                }
-                if (elem) type();
-                else resolve();
-            });
-        }
-
-        function typeWriter(text, elementId, speed = 45) {
-            let i = 0;
-            const elem = document.getElementById(elementId);
-            if (!elem) return;
-            elem.textContent = "";
-            function type() {
-                if (i < text.length) {
-                    elem.textContent += text.charAt(i);
-                    i++;
-                    setTimeout(type, speed);
-                }
-            }
-            type();
-        }
-
-        // --- Security & Ban State Logic ---
-        function getFailedAttempts() {
-            return parseInt(localStorage.getItem('traffic_failed_logs') || '0');
-        }
-
-        function incrementFailedAttempt() {
-            let failedLogs = getFailedAttempts() + 1;
-            localStorage.setItem('traffic_failed_logs', failedLogs);
-            logSystemEvent(`SECURITY WARN: Failed authentication attempt (${failedLogs}/3)`);
-
-            if (failedLogs >= 3) {
-                triggerPermanentBan();
-            }
-            return 3 - failedLogs;
-        }
-
-        function checkBanStatus() {
-            if (localStorage.getItem('network_banned') === 'true') {
-                document.getElementById('ban-layer').style.display = 'flex';
-                document.getElementById('app-content').style.display = 'none';
-                document.getElementById('sidebar').style.display = 'none';
-                return true;
-            }
-            if (localStorage.getItem('site_lockdown') === 'true') {
-                document.getElementById('lockdown-layer').style.display = 'flex';
-                document.getElementById('app-content').style.display = 'none';
-                document.getElementById('sidebar').style.display = 'none';
-                return true;
-            }
-            return false;
-        }
-
-        function triggerPermanentBan() {
-            localStorage.setItem('network_banned', 'true');
-            logSystemEvent("CRITICAL ALERT: Node permanently banned due to strike threshold.");
-            checkBanStatus();
-        }
-
-        const kanyeQuotes = [
-            "We're going to develop more ideas than we can update.",
-            "I still think I am the greatest.",
-            "My greatest pain in life is that I will never be able to see myself perform live.",
-            "There's nothing I can't do.",
-            "Believe in your flyness, conquer your shyness.",
-            "I feel like I'm too busy writing history to read it.",
-            "Nothing in life is promised except death.",
-            "For me, money is not my definition of success. Inspiration is my definition of success.",
-            "George Bush doesn't care about black people.",
-            "I refusal to accept other people's ideas of happiness for me.",
-            "Style is genderless.",
-            "I am Warhol. I am the number one most impactful artist of our generation.",
-            "Creative output is a reflection of your state of consciousness.",
-            "The music is our power.",
-            "Success is a journey, not a destination.",
-            "I want to make a lasting impact."
-        ];
-
-        if (!checkBanStatus()) {
-            const randomQuote = kanyeQuotes[Math.floor(Math.random() * kanyeQuotes.length)];
-            typeWriter(`"${randomQuote}"`, 'quote-display', 45);
-            typeWriter("Deus est veritas", 'latin-display', 70);
-        }
-
-        async function accessVault(itemId, requiresPassword) {
-            if (localStorage.getItem('network_banned') === 'true') return;
-
-            const targetUrl = atob(vaultRegistry[itemId]);
-
-            if (!requiresPassword || sessionStorage.getItem('vault_unlocked_' + itemId) === 'true') {
-                trackVaultClick(itemId);
-                logSystemEvent(`Vault item unlocked/accessed: ${itemId}`);
-                window.open(targetUrl, '_blank');
-                return;
-            }
-
-            const currentFailed = getFailedAttempts();
-            const attemptsRemaining = 3 - currentFailed;
-
-            const passwordInput = prompt(`SECURITY CHALLENGE: Enter access code to confirm clearance level.\n(${attemptsRemaining} attempts remaining before total node ban)`);
-            
-            if (passwordInput === null) return; 
-
-            const hashedInput = await sha256(passwordInput);
-            const ownerHash = await getOwnerHash();
-
-            if (hashedInput === ownerHash) {
-                logSystemEvent("Owner authenticated via Vault prompt.");
-                openOwnerControl();
-                return;
-            }
-            
-            const vaultHashes = {
-                book1: "8bd26852ab598941d2747d7d375a21ce3461b61d861227fc396fb34aa08e71dd",
-                book2: "8bd26852ab598941d2747d7d375a21ce3461b61d861227fc396fb34aa08e71dd",
-                book3: "8bd26852ab598941d2747d7d375a21ce3461b61d861227fc396fb34aa08e71dd",
-                book4: "8bd26852ab598941d2747d7d375a21ce3461b61d861227fc396fb34aa08e71dd",
-                cia_rr1: "85fc797deb4a6729e5e1934763d39d8562c73be1b8af59e473feb0a99bc39363"
-            };
-            
-            if (hashedInput === vaultHashes[itemId]) {
-                sessionStorage.setItem('vault_unlocked_' + itemId, 'true');
-                trackVaultClick(itemId);
-                logSystemEvent(`Vault password verified: ${itemId}`);
-                window.open(targetUrl, '_blank'); 
-            } else {
-                const rem = incrementFailedAttempt();
-                if (rem > 0) {
-                    alert(`ACCESS DENIED. Invalid signature credential.\nWarning: ${rem} validation attempt(s) remaining before network node isolation.`);
-                } else {
-                    alert("CRITICAL SECURITY VIOLATION: Strike threshold reached. Isolating node.");
-                }
-            }
-        }
-
-        function trackVaultClick(itemId) {
-            let counts = JSON.parse(localStorage.getItem('vault_stats') || '{}');
-            counts[itemId] = (counts[itemId] || 0) + 1;
-            localStorage.setItem('vault_stats', JSON.stringify(counts));
-        }
-
-        function toggleSidebar(event) {
-            event.stopPropagation(); 
-            document.getElementById('sidebar').classList.toggle('open');
-        }
-        
-        document.addEventListener('click', (e) => {
-            const sidebar = document.getElementById('sidebar');
-            if (!sidebar.contains(e.target) && sidebar.classList.contains('open')) {
-                sidebar.classList.remove('open');
-            }
+        chatChannel.send({
+          type: 'broadcast',
+          event: 'message',
+          payload: { sender: myAlias, text: text }
         });
 
-        // --- OWNER CONTROL CENTER ENGINE ---
-        let latinClickCounter = 0;
-        let latinClickTimer = null;
+        chatInput.value = '';
+      });
+    })();
 
-        async function registerLatinClick() {
-            latinClickCounter++;
-            clearTimeout(latinClickTimer);
-            if (latinClickCounter >= 3) {
-                latinClickCounter = 0;
-                const remAttempts = 3 - getFailedAttempts();
-                const pass = prompt(`ENTER OWNER IDENTIFICATION SIGNATURE:\n(${remAttempts} attempt(s) remaining)`);
-                if (pass !== null) {
-                    const hashedPass = await sha256(pass);
-                    const ownerHash = await getOwnerHash();
-                    if (hashedPass === ownerHash) {
-                        logSystemEvent("Owner authenticated via Latin trigger.");
-                        openOwnerControl();
-                    } else {
-                        const rem = incrementFailedAttempt();
-                        if (rem > 0) {
-                            alert(`INVALID OWNER CREDENTIAL.\nWarning: ${rem} attempt(s) remaining.`);
-                        } else {
-                            alert("CRITICAL SECURITY VIOLATION: Owner authentication failed 3 times. Banning node.");
-                        }
-                    }
-                }
-            } else {
-                latinClickTimer = setTimeout(() => { latinClickCounter = 0; }, 1200);
-            }
-        }
+    // ==========================================
+    // 7. CLASSIFIED VAULT UNLOCK LOGIC
+    // ==========================================
+    document.getElementById('vault-unlock-btn').addEventListener('click', () => {
+      const input = document.getElementById('vault-pass-input').value.trim();
+      const content = document.getElementById('vault-content');
 
-        function openOwnerControl() {
-            const screen = document.getElementById('owner-screen');
-            screen.classList.add('active');
+      if (input === '1337' || input.toLowerCase() === 'veritas') {
+        playSound('access_granted');
+        content.style.display = 'block';
+      } else {
+        playSound('access_denied');
+        alert('ACCESS DENIED: INVALID KEYCODE');
+        content.style.display = 'none';
+      }
+    });
 
-            const visits = localStorage.getItem('traffic_visits') || 0;
-            const sessions = localStorage.getItem('traffic_sessions') || 0;
-            const lastVisit = localStorage.getItem('traffic_last_visit') || 'N/A';
-            const vaultStats = JSON.parse(localStorage.getItem('vault_stats') || '{}');
-            const referrers = JSON.parse(localStorage.getItem('traffic_referrers') || '{}');
-            const failedLogs = getFailedAttempts();
+    // ==========================================
+    // 8. SECRET OWNER TERMINAL (TRIPLE CLICK)
+    // ==========================================
+    let clickCount = 0;
+    let clickTimer = null;
+    const trigger = document.getElementById('secret-trigger');
+    const modal = document.getElementById('owner-modal');
+    const closeBtn = document.getElementById('close-owner-btn');
+    const refreshBtn = document.getElementById('refresh-logs-btn');
+    const logsOutput = document.getElementById('logs-output');
 
-            let vaultBreakdown = Object.entries(vaultStats)
-                .map(([item, count]) => `${item}: ${count}`)
-                .join(', ') || 'None';
+    trigger.addEventListener('click', () => {
+      clickCount++;
+      clearTimeout(clickTimer);
+      if (clickCount === 3) {
+        playSound('access_granted');
+        modal.style.display = 'block';
+        fetchLogs();
+        clickCount = 0;
+      } else {
+        clickTimer = setTimeout(() => { clickCount = 0; }, 600);
+      }
+    });
 
-            let referrerBreakdown = Object.entries(referrers)
-                .map(([ref, count]) => `${ref}: ${count}`)
-                .join(', ') || 'None';
+    closeBtn.addEventListener('click', () => { 
+      playSound('click');
+      modal.style.display = 'none'; 
+    });
 
-            document.getElementById('owner-traffic-stats').innerHTML = `
-                • Total Page Loads: <strong>${visits}</strong><br>
-                • Unique Browser Sessions: <strong>${sessions}</strong><br>
-                • Last Session Time: <strong>${lastVisit}</strong><br>
-                • Traffic Sources: <strong>${referrerBreakdown}</strong><br>
-                • Vault Item Accesses: <strong>${vaultBreakdown}</strong>
-            `;
+    async function fetchLogs() {
+      logsOutput.textContent = 'Querying Supabase database...';
+      const { data, error } = await supabase
+        .from('visitor_logs')
+        .select('*')
+        .order('timestamp', { ascending: false })
+        .limit(20);
 
-            document.getElementById('owner-failed-attempts').textContent = failedLogs;
+      if (error) {
+        logsOutput.textContent = `Error fetching logs: ${error.message}`;
+        return;
+      }
 
-            renderEventLogs();
-            loadVisitorLogs();
-        }
+      if (!data || data.length === 0) {
+        logsOutput.textContent = 'No logs recorded yet.';
+        return;
+      }
 
-        function closeOwnerControl() {
-            document.getElementById('owner-screen').classList.remove('active');
-        }
+      logsOutput.textContent = data.map(log => 
+        `[${new Date(log.timestamp).toLocaleString()}]\nIP: ${log.ip}\nLoc: ${log.location}\nISP: ${log.isp}\nUA: ${log.user_agent}\n----------------------------------`
+      ).join('\n');
+    }
 
-        function renderEventLogs() {
-            const logContainer = document.getElementById('security-event-log');
-            const logs = JSON.parse(localStorage.getItem('system_event_logs') || '[]');
-            if (logs.length === 0) {
-                logContainer.innerHTML = '<em>No events recorded in local trail.</em>';
-            } else {
-                logContainer.innerHTML = logs.map(l => `<div>${l}</div>`).join('');
-            }
-        }
-
-        function clearEventLogs() {
-            localStorage.removeItem('system_event_logs');
-            renderEventLogs();
-        }
-
-        function clearBansAndReset() {
-            localStorage.removeItem('network_banned');
-            localStorage.removeItem('site_lockdown');
-            localStorage.setItem('traffic_failed_logs', '0');
-            document.getElementById('ban-layer').style.display = 'none';
-            document.getElementById('lockdown-layer').style.display = 'none';
-            document.getElementById('app-content').style.display = 'flex';
-            document.getElementById('owner-failed-attempts').textContent = '0';
-            logSystemEvent("Owner manually reset security strikes & unbanned network.");
-            alert("SUCCESS: System bans & lockdown overridden. Clearance restored.");
-        }
-
-        function toggleLockdown() {
-            const current = localStorage.getItem('site_lockdown') === 'true';
-            if (current) {
-                localStorage.setItem('site_lockdown', 'false');
-                alert("Site Lockdown DEACTIVATED.");
-            } else {
-                localStorage.setItem('site_lockdown', 'true');
-                alert("Site Lockdown ACTIVATED. Visitors will now see the Lockdown screen.");
-            }
-            checkBanStatus();
-        }
-
-        async function lookupIP() {
-            const input = document.getElementById('ip-lookup-input').value.trim();
-            const output = document.getElementById('ip-lookup-output');
-            output.innerHTML = "Querying IP intelligence node...";
-
-            try {
-                const endpoint = input ? `https://ipapi.co/${input}/json/` : 'https://ipapi.co/json/';
-                const res = await fetch(endpoint).then(r => r.json());
-
-                if (res.error) {
-                    output.innerHTML = `<span style="color:#ff3333;">Lookup Failed: ${res.reason || 'Invalid IP'}</span>`;
-                } else {
-                    output.innerHTML = `
-                        <strong>IP Address:</strong> ${res.ip}<br>
-                        <strong>Location:</strong> ${res.city}, ${res.region}, ${res.country_name} (${res.country_code})<br>
-                        <strong>ISP / Org:</strong> ${res.org || res.asn}<br>
-                        <strong>Timezone:</strong> ${res.timezone}<br>
-                        <strong>Postal:</strong> ${res.postal || 'N/A'}
-                    `;
-                }
-            } catch (e) {
-                output.innerHTML = `<span style="color:#ff3333;">Network Error: Unable to complete IP lookup API call.</span>`;
-            }
-        }
-
-        async function generateQuickHash() {
-            const input = document.getElementById('hash-input').value;
-            if (!input) {
-                document.getElementById('hash-output').value = '';
-                return;
-            }
-            const res = await sha256(input);
-            document.getElementById('hash-output').value = res;
-        }
-
-        // --- THE TRUTH Trigger Matrix ---
-        const truthTrigger = document.getElementById('truth-trigger');
-        const truthScreen = document.getElementById('truth-screen');
-        const truthClose = document.getElementById('truth-close');
-
-        truthTrigger.addEventListener('click', async (e) => {
-            e.stopPropagation(); 
-            if (localStorage.getItem('network_banned') === 'true') return;
-            
-            logSystemEvent("THE TRUTH modal triggered by client.");
-            truthScreen.classList.add('active');
-
-            const basicPromise = new Promise(resolve => {
-                const screenRes = `${window.screen.width} x ${window.screen.height} Display Node`;
-                const lang = navigator.language.toUpperCase();
-                
-                let osRaw = navigator.userAgent;
-                let currentOS = "Unknown Core";
-                if (osRaw.indexOf("Win") !== -1) currentOS = "Windows Environment";
-                if (osRaw.indexOf("Mac") !== -1) currentOS = "MacOS / iOS Framework";
-                if (osRaw.indexOf("Linux") !== -1) currentOS = "Linux / Android Kernel";
-
-                const cores = navigator.hardwareConcurrency || "Undetermined";
-                const ramRaw = navigator.deviceMemory || "Protected Mode";
-                const ram = typeof ramRaw === 'number' ? `~${ramRaw} GB Allocated` : ramRaw;
-
-                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Universal Node";
-                const handlesTouch = navigator.maxTouchPoints > 0 ? "Touch Interface (Mobile Device)" : "Tactile Cursor (Desktop Architecture)";
-
-                const netConnection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-                const netType = netConnection ? `${netConnection.effectiveType.toUpperCase()} Pipeline` : "Standard Access Channel";
-
-                resolve({ screenRes, lang, currentOS, cores, ram, tz, handlesTouch, netType });
-            });
-
-            const batteryPromise = navigator.getBattery ? navigator.getBattery() : Promise.resolve(null);
-            const geoPromise = fetch('https://ipapi.co/json/').then(r => r.json()).catch(() => null);
-
-            const [basic, battery, geo] = await Promise.all([basicPromise, batteryPromise, geoPromise]);
-
-            let weatherData = "Weather Telemetry Unavailable";
-            if (geo && geo.latitude && geo.longitude) {
-                try {
-                    const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${geo.latitude}&longitude=${geo.longitude}&current_weather=true`).then(r => r.json());
-                    if (wRes && wRes.current_weather) {
-                        const temp = Math.round(wRes.current_weather.temperature);
-                        const code = wRes.current_weather.weathercode;
-                        let cond = "Clear";
-                        if (code >= 1 && code <= 3) cond = "Partly Cloudy";
-                        else if (code >= 45 && code <= 48) cond = "Foggy";
-                        else if (code >= 51 && code <= 67) cond = "Rainy";
-                        else if (code >= 71 && code <= 77) cond = "Snowy";
-                        else if (code >= 80) cond = "Stormy";
-
-                        weatherData = `${temp > 0 ? '+' : ''}${temp}°C (${cond})`;
-                    }
-                } catch(err) {
-                    weatherData = "Weather Link Failed";
-                }
-            }
-
-            const ipData = geo ? geo.ip : "Connection Shielded";
-            const locData = geo ? `${geo.city}, ${geo.region_code}, ${geo.country_name}` : "Unknown Route";
-            const ipDataIsp = geo ? geo.org : "Obfuscated Network";
-
-            let batteryData = "Telemetry Unavailable";
-            if (battery) {
-                const pct = Math.round(battery.level * 100);
-                const status = battery.charging ? "Charging Array Link" : "Isolated Reservoir";
-                batteryData = `${pct}% Capacity [${status}]`;
-            }
-
-            await typeWriterAsync(`Network IP: ${ipData}`, 'data-ip');
-            await typeWriterAsync(`Geographic Nodes: ${locData}`, 'data-loc');
-            await typeWriterAsync(`Local Weather: ${weatherData}`, 'data-weather');
-            await typeWriterAsync(`ISP Carrier: ${ipDataIsp}`, 'data-isp');
-            await typeWriterAsync(`Display Array: ${basic.screenRes}`, 'data-screen');
-            await typeWriterAsync(`Platform Core: ${basic.currentOS}`, 'data-os');
-            await typeWriterAsync(`Client Language: ${basic.lang}`, 'data-lang');
-            await typeWriterAsync(`Processing Cores: ${basic.cores} Threads Active`, 'data-cores');
-            await typeWriterAsync(`Estimated Memory: ${basic.ram}`, 'data-ram');
-            await typeWriterAsync(`Battery Diagnostics: ${batteryData}`, 'data-battery');
-            await typeWriterAsync(`Temporal Node: ${basic.tz.toUpperCase()}`, 'data-timezone');
-            await typeWriterAsync(`Network Protocol: ${basic.netType}`, 'data-nettype');
-            await typeWriterAsync(`Interface Mode: ${basic.handlesTouch}`, 'data-touch');
-        });
-
-        truthClose.addEventListener('click', () => {
-            truthScreen.classList.remove('active');
-        });
-
-        // --- MATRIX RAIN ANIMATION ENGINE ---
-        let matrixInterval = null;
-        function toggleMatrixRain() {
-            const canvas = document.getElementById('matrix-canvas');
-            if (canvas.style.display === 'block') {
-                canvas.style.display = 'none';
-                clearInterval(matrixInterval);
-            } else {
-                canvas.style.display = 'block';
-                startMatrixRain();
-            }
-        }
-
-        function startMatrixRain() {
-            const canvas = document.getElementById('matrix-canvas');
-            const ctx = canvas.getContext('2d');
-
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-
-            const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$%&*';
-            const fontSize = 14;
-            const columns = canvas.width / fontSize;
-            const drops = Array.from({ length: columns }).fill(1);
-
-            function draw() {
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                ctx.fillStyle = '#00ff66';
-                ctx.font = fontSize + 'px monospace';
-
-                for (let i = 0; i < drops.length; i++) {
-                    const text = chars.charAt(Math.floor(Math.random() * chars.length));
-                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                        drops[i] = 0;
-                    }
-                    drops[i]++;
-                }
-            }
-
-            clearInterval(matrixInterval);
-            matrixInterval = setInterval(draw, 33);
-        }
-    </script>
+    refreshBtn.addEventListener('click', () => {
+      playSound('click');
+      fetchLogs();
+    });
+  </script>
 </body>
 </html>
