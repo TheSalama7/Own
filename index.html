@@ -333,7 +333,7 @@
       <button class="audio-toggle" id="sfx-toggle">AUDIO: ON</button>
     </header>
 
-    <!-- REAL-TIME CHAT WIDGET -->
+    <!-- REAL-TIME ANIMAL CHAT WIDGET -->
     <div class="card" id="hacker-chat-container">
       <div class="chat-header">
         <span class="chat-title">> LIVE_NODE_NETWORK // CHAT</span>
@@ -341,8 +341,8 @@
       </div>
       <div id="chat-messages"></div>
       <form id="chat-form">
-        <span id="chat-user-alias">Node_????:</span>
-        <input type="text" id="chat-input" placeholder="Type message..." autocomplete="off" maxlength="250" required>
+        <span id="chat-user-alias">Anon_????:</span>
+        <input type="text" id="chat-input" placeholder="Type anything..." autocomplete="off" maxlength="250" required>
         <button type="submit" class="btn" id="chat-send-btn">SEND</button>
       </form>
     </div>
@@ -559,10 +559,21 @@
     });
 
     // ==========================================
-    // 6. REAL-TIME TERMINAL CHAT
+    // 6. REAL-TIME CHAT WITH RANDOM ANIMAL ALIASES
     // ==========================================
     (function initHackerChat() {
-      const myAlias = `Node_${Math.floor(1000 + Math.random() * 9000)}`;
+      // List of random animals for nicknames
+      const animals = [
+        'Fox', 'Elephant', 'Wolf', 'Panther', 'Falcon', 'Bear', 'Tiger', 
+        'Owl', 'Raven', 'Cheetah', 'Cobra', 'Lynx', 'Otter', 'Jaguar', 
+        'Panda', 'Viper', 'Badger', 'Eagle', 'Shark', 'Rhino', 'Hawk',
+        'Leopard', 'Mantis', 'Bison', 'Stallion', 'Dragon', 'Phoenix'
+      ];
+      
+      const randomAnimal = animals[Math.floor(Math.random() * animals.length)];
+      const randomCode = Math.floor(100 + Math.random() * 900);
+      const myAlias = `${randomAnimal}_${randomCode}`;
+
       document.getElementById('chat-user-alias').textContent = `${myAlias}:`;
 
       const messagesContainer = document.getElementById('chat-messages');
@@ -609,7 +620,7 @@
       chatChannel.on('presence', { event: 'join' }, ({ newPresences }) => {
         newPresences.forEach(p => {
           if (p.key !== myAlias) {
-            appendMessage('SYSTEM', `${p.key} connected.`, true);
+            appendMessage('SYSTEM', `${p.key} connected to terminal network.`, true);
           }
         });
       });
@@ -623,7 +634,7 @@
       chatChannel.subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
           await chatChannel.track({ onlineAt: new Date().toISOString() });
-          appendMessage('SYSTEM', `Connected to node network as ${myAlias}.`, true);
+          appendMessage('SYSTEM', `Encrypted connection established as ${myAlias}.`, true);
         }
       });
 
