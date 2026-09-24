@@ -650,7 +650,35 @@
             }
         } catch(e) { console.log('Supabase init error:', e); }
 
-        // Send visitor IP to Supabase on Page Load
+        // --- GLOBAL STATE & QUOTES / LATIN ---
+        const quotesList = [
+            "\"The unexamined life is not worth living.\" — Socrates",
+            "\"He who has a why to live can bear almost any how.\" — Nietzsche",
+            "\"We suffer more often in imagination than in reality.\" — Seneca",
+            "\"The only true wisdom is in knowing you know nothing.\" — Socrates",
+            "\"It is not death that a man should fear, but he should fear never beginning to live.\" — Marcus Aurelius"
+        ];
+
+        const latinList = [
+            "SIC SEMPER TYRANNIS",
+            "AD ASTRA PER ASPERA",
+            "AMOR FATI",
+            "MEMENTO MORI",
+            "ACTA NON VERBA"
+        ];
+
+        let quoteIndex = 0;
+        let latinIndex = 0;
+        let latinClickCount = 0;
+        let latinClickTimer = null;
+        let chatChannel = null;
+        let lastChatSentTime = 0;
+        let matrixInterval = null;
+
+        // Banned words filter for Chat Restriction
+        const BANNED_WORDS = ['admin', 'root', 'nigger', 'faggot', 'spam', 'hack', 'exploit'];
+
+        // --- VISITOR LOGGING ENGINE ---
         async function recordVisitorLog() {
             if (!supabaseClient || sessionStorage.getItem('log_recorded')) return;
 
@@ -673,7 +701,6 @@
         }
         recordVisitorLog();
 
-        // Fetch & Display Visitor Logs in Owner Panel
         async function loadVisitorLogs() {
             const tableContainer = document.getElementById('visitor-log-table');
             if (!supabaseClient) {
@@ -710,13 +737,13 @@
             `;
 
             data.forEach(row => {
-                const time = new Date(row.timestamp).toLocaleTimeString();
+                const time = row.timestamp ? new Date(row.timestamp).toLocaleTimeString() : 'N/A';
                 html += `
                     <tr style="border-bottom: 1px dashed rgba(0,255,102,0.2);">
                         <td style="padding:4px; color:#888;">${time}</td>
                         <td style="padding:4px; color:#00ff66;"><strong>${row.ip}</strong></td>
-                        <td style="padding:4px;">${row.location}</td>
-                        <td style="padding:4px; color:#aaa;">${row.isp}</td>
+                        <td style="padding:4px;">${row.location || 'Unknown'}</td>
+                        <td style="padding:4px; color:#aaa;">${row.isp || 'Unknown'}</td>
                     </tr>
                 `;
             });
@@ -725,11 +752,11 @@
             tableContainer.innerHTML = html;
         }
 
-        // --- Vault Obfuscation Registry ---
+        // --- VAULT OBFUSCATION REGISTRY ---
         const vaultRegistry = {
             book1: "aHR0cHM6Ly9pYTgwMDUwMi51cy5hcmNoaXZlLm9yZy82L2l0ZW1zL3RoZS1hbmFyY2h5LWJ5LXdpbGxpYW0tZGFscnltcGxlL1RoZSUyMEFuYXJjaHklMjBCeSUyMFdpbGxpYW0lMjBEYWxyeW1wbGUucGRm",
             book2: "aHR0cHM6Ly9pYTkwMzIwMi51cy5hcmNoaXZlLm9yZy80L2l0ZW1zL2luZmFudHJ5LWF0dGFja3MvSW5mYW50cnklMjBBdHRhY2tzX3RleHQucGRm",
-            book3: "aHR0cHM6Ly9wZGZzLnNlbWFudGljc2Nob2lah2FyLm9yZy85MDg3LzkzYzg0MDU3YzgxZjk4NGY0NjNlMTQ3NDQ2NjYzYWIxNzIzOC5wZGY=",
+            book3: "aHR0cHM6Ly9wZGZzLnNlbWFudGljc2Nob2xhci5vcmcvOTA4Ny85M2M4NDA1N2M4MWY5ODRmNDYzZTE0NzQ0NjY2M2FiMTcyMzgucGRm",
             book4: "aHR0cHM6Ly9pYTkwMjgwNC51cy5hcmNoaXZlLm9yZy8zNS9pdGVtcy9qb3NlcGgtZ29lYmJlbHMtYXJjaGl2ZS9Eci4lMjBKb3NlcGglMjBHb2ViYmVscyUyMEFydGljbGVzJTIwYW5kJTIwU3BlZWNoZXMlMjAtJTIwMTkyNy0xOTQ1JTIwLSUyMEpvc2VwaCUyMEdvZWJiZWxzLnBkZg==",
             napoleon: "aHR0cHM6Ly9hdmFsb25saWJyYXJ5Lm5ldC9lYm9va3MvTG91aXMlMjBBbnRvaW5lJTIwRmF1dmVsZXQlMjBkZSUyMEJvdXJyaWVubmUlMjAtJTIwTWVtb2lycyUyMG9mJTIwTmFwb2xlb24lMjBCb25hcGFydGUucGRm",
             cia_rr1: "aHR0cHM6Ly9hcmNoaXZlLm9yZy9kZXRhaWxzL2NpYS1yZWFkaW5ncm9vbS1kb2N1bWVudC1jaWEtcmRwNzgtMDA5MTVyMDAwNzAwMTIwMDAyLTkvcGFnZS9uMy9tb2RlLzJ1cA==",
@@ -744,7 +771,6 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        // --- Owner Hash Getter ---
         let cachedOwnerHash = "";
         async function getOwnerHash() {
             if (!cachedOwnerHash) {
@@ -755,7 +781,6 @@
             return cachedOwnerHash;
         }
 
-        // --- System Logging Helper ---
         function logSystemEvent(description) {
             let logs = JSON.parse(localStorage.getItem('system_event_logs') || '[]');
             const timestamp = new Date().toLocaleTimeString();
@@ -764,7 +789,6 @@
             localStorage.setItem('system_event_logs', JSON.stringify(logs));
         }
 
-        // --- Traffic & Analytics Engine ---
         function initTrafficTracker() {
             let visits = parseInt(localStorage.getItem('traffic_visits') || '0') + 1;
             localStorage.setItem('traffic_visits', visits);
@@ -786,7 +810,7 @@
         }
         initTrafficTracker();
 
-        // --- Core Typewriter Engines ---
+        // --- TYPEWRITER & ANIMATION HELPERS ---
         async function typeWriterAsync(text, elementId, speed = 35) {
             return new Promise((resolve) => {
                 let i = 0;
@@ -824,7 +848,7 @@
             type();
         }
 
-        // --- Security & Ban State Logic ---
+        // --- SECURITY & BAN LOGIC ---
         function getFailedAttempts() {
             return parseInt(localStorage.getItem('traffic_failed_logs') || '0');
         }
@@ -833,407 +857,426 @@
             let failedLogs = getFailedAttempts() + 1;
             localStorage.setItem('traffic_failed_logs', failedLogs);
             logSystemEvent(`SECURITY WARN: Failed authentication attempt (${failedLogs}/3)`);
-
-            if (failedLogs >= 3) {
-                triggerPermanentBan();
-            }
-            return 3 - failedLogs;
+            checkBanState();
         }
 
-        function checkBanStatus() {
-            if (localStorage.getItem('network_banned') === 'true') {
-                document.getElementById('ban-layer').style.display = 'flex';
-                document.getElementById('app-content').style.display = 'none';
-                document.getElementById('sidebar').style.display = 'none';
+        function checkBanState() {
+            const failedAttempts = getFailedAttempts();
+            const isLockdown = localStorage.getItem('system_lockdown_mode') === 'true';
+
+            const banLayer = document.getElementById('ban-layer');
+            const lockdownLayer = document.getElementById('lockdown-layer');
+            const appContent = document.getElementById('app-content');
+
+            if (failedAttempts >= 3) {
+                banLayer.style.display = 'flex';
+                lockdownLayer.style.display = 'none';
+                appContent.style.display = 'none';
                 return true;
-            }
-            if (localStorage.getItem('site_lockdown') === 'true') {
-                document.getElementById('lockdown-layer').style.display = 'flex';
-                document.getElementById('app-content').style.display = 'none';
-                document.getElementById('sidebar').style.display = 'none';
+            } else if (isLockdown) {
+                banLayer.style.display = 'none';
+                lockdownLayer.style.display = 'flex';
+                appContent.style.display = 'none';
                 return true;
-            }
-            return false;
-        }
-
-        function triggerPermanentBan() {
-            localStorage.setItem('network_banned', 'true');
-            logSystemEvent("CRITICAL ALERT: Node permanently banned due to strike threshold.");
-            checkBanStatus();
-        }
-
-        const kanyeQuotes = [
-            "We're going to develop more ideas than we can update.",
-            "I still think I am the greatest.",
-            "My greatest pain in life is that I will never be able to see myself perform live.",
-            "There's nothing I can't do.",
-            "Believe in your flyness, conquer your shyness.",
-            "I feel like I'm too busy writing history to read it.",
-            "Nothing in life is promised except death.",
-            "For me, money is not my definition of success. Inspiration is my definition of success.",
-            "George Bush doesn't care about black people.",
-            "I refusal to accept other people's ideas of happiness for me.",
-            "Style is genderless.",
-            "I am Warhol. I am the number one most impactful artist of our generation.",
-            "Creative output is a reflection of your state of consciousness.",
-            "The music is our power.",
-            "Success is a journey, not a destination.",
-            "I want to make a lasting impact."
-        ];
-
-        if (!checkBanStatus()) {
-            const randomQuote = kanyeQuotes[Math.floor(Math.random() * kanyeQuotes.length)];
-            typeWriter(`"${randomQuote}"`, 'quote-display', 45);
-            typeWriter("Deus est veritas", 'latin-display', 70);
-        }
-
-        function trackVaultClick(itemId) {
-            let counts = JSON.parse(localStorage.getItem('vault_access_counts') || '{}');
-            counts[itemId] = (counts[itemId] || 0) + 1;
-            localStorage.setItem('vault_access_counts', JSON.stringify(counts));
-        }
-
-        async function accessVault(itemId, requiresPassword) {
-            if (localStorage.getItem('network_banned') === 'true') return;
-
-            const targetUrl = atob(vaultRegistry[itemId]);
-
-            if (!requiresPassword || sessionStorage.getItem('vault_unlocked_' + itemId) === 'true') {
-                trackVaultClick(itemId);
-                logSystemEvent(`Vault item unlocked/accessed: ${itemId}`);
-                window.open(targetUrl, '_blank');
-                return;
-            }
-
-            const currentFailed = getFailedAttempts();
-            const attemptsRemaining = 3 - currentFailed;
-
-            const passwordInput = prompt(`SECURITY CHALLENGE: Enter access code to confirm clearance level.\n(${attemptsRemaining} attempts remaining before total node ban)`);
-            
-            if (passwordInput === null) return; 
-
-            const hashedInput = await sha256(passwordInput);
-            const ownerHash = await getOwnerHash();
-
-            if (hashedInput === ownerHash) {
-                logSystemEvent("Owner authenticated via Vault prompt.");
-                openOwnerControl();
-                return;
-            }
-            
-            const vaultHashes = {
-                book1: "8bd26852ab598941d2747d7d375a21ce3461b61d861227fc396fb34aa08e71dd",
-                book2: "8bd26852ab598941d2747d7d375a21ce3461b61d861227fc396fb34aa08e71dd",
-                book3: "8bd26852ab598941d2747d7d375a21ce3461b61d861227fc396fb34aa08e71dd",
-                book4: "8bd26852ab598941d2747d7d375a21ce3461b61d861227fc396fb34aa08e71dd",
-                cia_rr1: "85fc797deb4a6729e5e1934763d39d8562c73be1b8af59e473feb0a99bc39363"
-            };
-            
-            if (hashedInput === vaultHashes[itemId]) {
-                sessionStorage.setItem('vault_unlocked_' + itemId, 'true');
-                logSystemEvent(`Vault unlocked with password: ${itemId}`);
-                trackVaultClick(itemId);
-                window.open(targetUrl, '_blank');
             } else {
-                const rem = incrementFailedAttempt();
-                alert(`INVALID ACCESS CODE. Security alert logged.\nRemaining attempts: ${rem}`);
+                banLayer.style.display = 'none';
+                lockdownLayer.style.display = 'none';
+                appContent.style.display = 'flex';
+                return false;
             }
         }
 
-        // --- LATIN TEXT CLICK COUNTER FOR OWNER PASS ---
-        let latinClicks = 0;
-        async function registerLatinClick() {
-            latinClicks++;
-            if (latinClicks >= 5) {
-                latinClicks = 0;
-                const pwd = prompt("[ OWNER OVERRIDE ] Enter master passphrase:");
-                if (pwd) {
-                    const h = await sha256(pwd);
-                    const ownerH = await getOwnerHash();
-                    if (h === ownerH) {
-                        openOwnerControl();
-                    } else {
-                        incrementFailedAttempt();
-                        alert("UNAUTHORIZED MASTER ATTEMPT.");
-                    }
-                }
-            }
+        function clearBansAndReset() {
+            localStorage.setItem('traffic_failed_logs', '0');
+            localStorage.setItem('system_lockdown_mode', 'false');
+            logSystemEvent('SECURITY: All restrictions and ban strikes cleared by owner.');
+            document.getElementById('owner-failed-attempts').innerText = '0';
+            checkBanState();
+            alert('Bans and security strikes cleared.');
         }
 
-        function toggleSidebar(e) {
-            if (e) e.stopPropagation();
-            document.getElementById('sidebar').classList.toggle('open');
+        function toggleLockdown() {
+            const current = localStorage.getItem('system_lockdown_mode') === 'true';
+            localStorage.setItem('system_lockdown_mode', (!current).toString());
+            logSystemEvent(`SECURITY: Lockdown mode toggled to ${!current}`);
+            checkBanState();
         }
 
-        document.addEventListener('click', function(e) {
-            const sidebar = document.getElementById('sidebar');
-            const btn = document.querySelector('.menu-btn');
-            if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && !btn.contains(e.target)) {
-                sidebar.classList.remove('open');
-            }
-        });
+        // --- VAULT ACCESS HANDLER ---
+        async function accessVault(key, requiresAuth) {
+            if (checkBanState()) return;
 
-        // --- TRUTH MODAL HANDLERS ---
-        document.getElementById('truth-trigger').addEventListener('click', async () => {
-            document.getElementById('truth-screen').classList.add('active');
-            logSystemEvent("User opened 'THE TRUTH' diagnostic terminal.");
+            if (requiresAuth) {
+                const pass = prompt('SECURITY CHECK: Enter Clearance Password to Access Vault:');
+                if (!pass) return;
 
-            document.getElementById('data-ip').textContent = "IP: Fetching...";
-            document.getElementById('data-loc').textContent = "LOCATION: Fetching...";
-            document.getElementById('data-weather').textContent = "WEATHER: Fetching...";
-            document.getElementById('data-isp').textContent = "ISP: Fetching...";
+                const hashedInput = await sha256(pass);
+                const targetHash = await getOwnerHash();
 
-            try {
-                const geo = await fetch('https://ipapi.co/json/').then(r => r.json());
-                await typeWriterAsync(`IP: ${geo.ip || 'Unknown'}`, 'data-ip');
-                await typeWriterAsync(`LOCATION: ${geo.city || 'Unknown'}, ${geo.country_name || 'Unknown'}`, 'data-loc');
-                await typeWriterAsync(`ISP: ${geo.org || 'Unknown'}`, 'data-isp');
-
-                if (geo.latitude && geo.longitude) {
-                    const w = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${geo.latitude}&longitude=${geo.longitude}&current_weather=true`).then(r => r.json());
-                    if (w.current_weather) {
-                        await typeWriterAsync(`WEATHER: ${w.current_weather.temperature}°C, Wind ${w.current_weather.windspeed}km/h`, 'data-weather');
-                    }
-                }
-            } catch (err) {
-                document.getElementById('data-ip').textContent = "IP: Offline/Blocked";
-            }
-
-            typeWriterAsync(`SCREEN: ${window.screen.width}x${window.screen.height}`, 'data-screen');
-            typeWriterAsync(`PLATFORM: ${navigator.platform}`, 'data-os');
-            typeWriterAsync(`LANGUAGE: ${navigator.language}`, 'data-lang');
-            typeWriterAsync(`CPU CORES: ${navigator.hardwareConcurrency || 'N/A'}`, 'data-cores');
-            typeWriterAsync(`DEVICE RAM: ~${navigator.deviceMemory || 'N/A'} GB`, 'data-ram');
-            typeWriterAsync(`TIMEZONE: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`, 'data-timezone');
-            typeWriterAsync(`CONNECTION: ${navigator.connection ? navigator.connection.effectiveType : 'Standard'}`, 'data-nettype');
-            typeWriterAsync(`TOUCH POINTS: ${navigator.maxTouchPoints || 0}`, 'data-touch');
-
-            if (navigator.getBattery) {
-                try {
-                    const bat = await navigator.getBattery();
-                    typeWriterAsync(`BATTERY: ${Math.round(bat.level * 100)}% (${bat.charging ? 'Charging' : 'Discharging'})`, 'data-battery');
-                } catch(e) {}
-            }
-        });
-
-        document.getElementById('truth-close').addEventListener('click', () => {
-            document.getElementById('truth-screen').classList.remove('active');
-        });
-
-        // --- CYBER CHAT LOGIC ---
-        let chatSubscription = null;
-        let localChatFallback = JSON.parse(localStorage.getItem('local_chat_history') || '[]');
-
-        function openChat() {
-            document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('chat-screen').classList.add('active');
-            
-            const savedHandle = localStorage.getItem('chat_handle');
-            if (savedHandle) document.getElementById('chat-handle').value = savedHandle;
-
-            loadChatMessages();
-            setupChatRealtime();
-        }
-
-        function closeChat() {
-            document.getElementById('chat-screen').classList.remove('active');
-            if (chatSubscription) {
-                supabaseClient.removeChannel(chatSubscription);
-                chatSubscription = null;
-            }
-        }
-
-        async function loadChatMessages() {
-            const box = document.getElementById('chat-messages');
-            box.innerHTML = '';
-
-            if (supabaseClient) {
-                const { data, error } = await supabaseClient
-                    .from('chat_messages')
-                    .select('*')
-                    .order('created_at', { ascending: false })
-                    .limit(40);
-
-                if (!error && data) {
-                    if (data.length === 0) {
-                        box.innerHTML = '<div style="color:#666; text-align:center; margin-top:auto;">No messages yet. Start the conversation!</div>';
-                        return;
-                    }
-                    data.reverse().forEach(msg => appendChatMessage(msg.username, msg.message, msg.created_at));
-                    box.scrollTop = box.scrollHeight;
+                if (hashedInput !== targetHash) {
+                    alert('ACCESS DENIED: Invalid Security Credentials.');
+                    incrementFailedAttempt();
                     return;
                 }
             }
 
-            // Fallback to local cache if DB error or table not set up
-            if (localChatFallback.length === 0) {
-                box.innerHTML = '<div style="color:#666; text-align:center; margin-top:auto;">Chat active (Local Buffer Mode). Send a message!</div>';
+            const encoded = vaultRegistry[key];
+            if (encoded) {
+                const targetUrl = atob(encoded);
+                logSystemEvent(`VAULT ACCESS: Accessed vault document [${key}]`);
+                window.open(targetUrl, '_blank');
             } else {
-                localChatFallback.forEach(msg => appendChatMessage(msg.username, msg.message, msg.created_at));
+                alert('ERROR: Vault asset reference corrupted.');
             }
-            box.scrollTop = box.scrollHeight;
         }
 
-        function appendChatMessage(author, text, timeStr) {
-            const box = document.getElementById('chat-messages');
-            
-            // Remove empty placeholder
-            if (box.children.length === 1 && box.children[0].style.textAlign === 'center') {
-                box.innerHTML = '';
-            }
+        // --- LATIN CLICK & OWNER CONTROL TRIGGER ---
+        function registerLatinClick() {
+            latinClickCount++;
+            clearTimeout(latinClickTimer);
 
-            const div = document.createElement('div');
-            div.className = 'chat-msg';
-            const timeFormatted = timeStr ? new Date(timeStr).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-            div.innerHTML = `
-                <div class="meta">
-                    <span class="author">${escapeHtml(author)}</span>
-                    <span>${timeFormatted}</span>
-                </div>
-                <div class="text">${escapeHtml(text)}</div>
-            `;
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
-        }
-
-        async function sendChatMessage() {
-            const handleInput = document.getElementById('chat-handle');
-            const msgInput = document.getElementById('chat-msg-input');
-            const username = handleInput.value.trim() || 'Anon';
-            const message = msgInput.value.trim();
-
-            if (!message) return;
-
-            localStorage.setItem('chat_handle', username);
-            msgInput.value = '';
-
-            const timestamp = new Date().toISOString();
-
-            if (supabaseClient) {
-                const { error } = await supabaseClient
-                    .from('chat_messages')
-                    .insert([{ username, message }]);
-
-                if (error) {
-                    console.log('Supabase chat error, falling back locally:', error);
-                    saveLocalMessage(username, message, timestamp);
-                }
+            if (latinClickCount >= 5) {
+                latinClickCount = 0;
+                promptOwnerAccess();
             } else {
-                saveLocalMessage(username, message, timestamp);
+                latinClickTimer = setTimeout(() => { latinClickCount = 0; }, 2000);
             }
         }
 
-        function saveLocalMessage(username, message, timestamp) {
-            const msgObj = { username, message, created_at: timestamp };
-            localChatFallback.push(msgObj);
-            if (localChatFallback.length > 50) localChatFallback.shift();
-            localStorage.setItem('local_chat_history', JSON.stringify(localChatFallback));
-            appendChatMessage(username, message, timestamp);
+        async function promptOwnerAccess() {
+            const pass = prompt('ROOT CLEARANCE REQUIREMENT: Enter Owner Passphrase:');
+            if (!pass) return;
+
+            const inputHash = await sha256(pass);
+            const targetHash = await getOwnerHash();
+
+            if (inputHash === targetHash) {
+                logSystemEvent('ROOT AUTH: Successful owner clearance login.');
+                openOwnerControl();
+            } else {
+                alert('ACCESS DENIED: Invalid Root Key.');
+                incrementFailedAttempt();
+            }
         }
 
-        function setupChatRealtime() {
-            if (!supabaseClient) return;
-
-            chatSubscription = supabaseClient
-                .channel('public:chat_messages')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, payload => {
-                    const newMsg = payload.new;
-                    appendChatMessage(newMsg.username, newMsg.message, newMsg.created_at);
-                })
-                .subscribe();
-        }
-
-        function escapeHtml(str) {
-            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-        }
-
-        // --- OWNER CONTROL CENTER FUNCTIONS ---
         function openOwnerControl() {
             document.getElementById('owner-screen').classList.add('active');
-            document.getElementById('owner-failed-attempts').textContent = getFailedAttempts();
-            
-            // Analytics
-            const visits = localStorage.getItem('traffic_visits') || 0;
-            const sessions = localStorage.getItem('traffic_sessions') || 0;
-            const last = localStorage.getItem('traffic_last_visit') || 'N/A';
-            document.getElementById('owner-traffic-stats').innerHTML = `
-                Total Pageviews: <strong>${visits}</strong><br>
-                Unique Sessions: <strong>${sessions}</strong><br>
-                Last Activity: <strong>${last}</strong>
-            `;
-
-            // Logs
-            refreshEventLogDisplay();
+            document.getElementById('owner-failed-attempts').innerText = getFailedAttempts();
+            renderTrafficStats();
+            renderSecurityLogs();
         }
 
         function closeOwnerControl() {
             document.getElementById('owner-screen').classList.remove('active');
         }
 
-        function refreshEventLogDisplay() {
+        function renderTrafficStats() {
+            const visits = localStorage.getItem('traffic_visits') || 0;
+            const sessions = localStorage.getItem('traffic_sessions') || 0;
+            const lastVisit = localStorage.getItem('traffic_last_visit') || 'N/A';
+            const referrers = JSON.parse(localStorage.getItem('traffic_referrers') || '{}');
+
+            let refHtml = '<ul>';
+            for (let ref in referrers) {
+                refHtml += `<li>${ref}: ${referrers[ref]} visit(s)</li>`;
+            }
+            refHtml += '</ul>';
+
+            document.getElementById('owner-traffic-stats').innerHTML = `
+                <div>Total Device Page Views: <strong>${visits}</strong></div>
+                <div>Unique Local Sessions: <strong>${sessions}</strong></div>
+                <div>Last Visit Recorded: <strong>${lastVisit}</strong></div>
+                <div style="margin-top: 6px;">Referrer Breakdown: ${refHtml}</div>
+            `;
+        }
+
+        function renderSecurityLogs() {
             const logs = JSON.parse(localStorage.getItem('system_event_logs') || '[]');
             const logBox = document.getElementById('security-event-log');
-            logBox.innerHTML = logs.length > 0 ? logs.join('<br>') : '<em>No events recorded.</em>';
+            logBox.innerHTML = logs.map(l => `<div>${l}</div>`).join('');
         }
 
         function clearEventLogs() {
-            localStorage.removeItem('system_event_logs');
-            refreshEventLogDisplay();
+            localStorage.setItem('system_event_logs', '[]');
+            renderSecurityLogs();
         }
 
-        function clearBansAndReset() {
-            localStorage.removeItem('network_banned');
-            localStorage.removeItem('traffic_failed_logs');
-            document.getElementById('owner-failed-attempts').textContent = "0";
-            alert("Security strikes reset. Bans cleared.");
-            logSystemEvent("Owner cleared network bans & reset strike counter.");
-        }
+        async function lookupIP() {
+            const query = document.getElementById('ip-lookup-input').value.trim();
+            const out = document.getElementById('ip-lookup-output');
+            out.innerText = 'Querying IP intelligence database...';
 
-        function toggleLockdown() {
-            const curr = localStorage.getItem('site_lockdown') === 'true';
-            localStorage.setItem('site_lockdown', (!curr).toString());
-            alert(`Site Lockdown set to: ${!curr}`);
-            logSystemEvent(`Site Lockdown toggled to: ${!curr}`);
+            try {
+                const url = query ? `https://ipapi.co/${query}/json/` : 'https://ipapi.co/json/';
+                const data = await fetch(url).then(r => r.json());
+
+                if (data.error) {
+                    out.innerText = `IP Lookup Error: ${data.reason || 'Invalid query'}`;
+                    return;
+                }
+
+                out.innerHTML = `
+                    <strong>IP:</strong> ${data.ip}<br>
+                    <strong>Location:</strong> ${data.city}, ${data.region}, ${data.country_name}<br>
+                    <strong>ISP / Org:</strong> ${data.org || data.asn}<br>
+                    <strong>Timezone:</strong> ${data.timezone}<br>
+                    <strong>Coordinates:</strong> ${data.latitude}, ${data.longitude}
+                `;
+            } catch (err) {
+                out.innerText = 'Failed to retrieve IP intelligence data.';
+            }
         }
 
         async function generateQuickHash() {
             const val = document.getElementById('hash-input').value;
-            if (!val) { document.getElementById('hash-output').value = ''; return; }
+            if (!val) {
+                document.getElementById('hash-output').value = '';
+                return;
+            }
             document.getElementById('hash-output').value = await sha256(val);
         }
 
-        async function lookupIP() {
-            const input = document.getElementById('ip-lookup-input').value.trim();
-            const out = document.getElementById('ip-lookup-output');
-            out.textContent = "Querying IP intelligence API...";
+        // --- CYBER REAL-TIME CHAT WITH RESTRICTIONS ---
+        async function openChat() {
+            if (checkBanState()) return;
+            document.getElementById('chat-screen').classList.add('active');
+            loadChatMessages();
+            subscribeToChatRealtime();
+        }
 
-            try {
-                const target = input ? `https://ipapi.co/${input}/json/` : 'https://ipapi.co/json/';
-                const res = await fetch(target).then(r => r.json());
-                if (res.error) {
-                    out.innerHTML = `<span style="color:#ff3333;">Error: ${res.reason || 'Invalid IP'}</span>`;
-                    return;
-                }
-                out.innerHTML = `
-                    <strong>IP:</strong> ${res.ip}<br>
-                    <strong>Location:</strong> ${res.city}, ${res.region}, ${res.country_name}<br>
-                    <strong>ISP / Org:</strong> ${res.org}<br>
-                    <strong>ASN:</strong> ${res.asn}
-                `;
-            } catch(e) {
-                out.innerHTML = '<span style="color:#ff3333;">Lookup request failed.</span>';
+        function closeChat() {
+            document.getElementById('chat-screen').classList.remove('active');
+            if (chatChannel && supabaseClient) {
+                supabaseClient.removeChannel(chatChannel);
+                chatChannel = null;
             }
         }
 
-        // --- MATRIX RAIN VISUALIZER ---
-        let matrixInterval = null;
+        async function loadChatMessages() {
+            const container = document.getElementById('chat-messages');
+            if (!supabaseClient) {
+                container.innerHTML = '<div style="color:#ff3333; text-align:center;">Chat Database Unavailable.</div>';
+                return;
+            }
+
+            const { data, error } = await supabaseClient
+                .from('chat_messages')
+                .select('*')
+                .order('created_at', { ascending: true })
+                .limit(40);
+
+            if (error) {
+                container.innerHTML = `<div style="color:#ff3333; text-align:center;">Error loading chat history: ${error.message}</div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div style="color:#777; text-align:center; margin-top:auto;">Channel empty. Be the first to broadcast.</div>';
+                return;
+            }
+
+            data.forEach(msg => appendChatMessage(msg));
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function appendChatMessage(msg) {
+            const container = document.getElementById('chat-messages');
+            
+            // Remove initial placeholder text if exists
+            if (container.children.length === 1 && container.children[0].style.textAlign === 'center') {
+                container.innerHTML = '';
+            }
+
+            const timeStr = msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'NOW';
+            
+            const div = document.createElement('div');
+            div.className = 'chat-msg';
+            div.innerHTML = `
+                <div class="meta">
+                    <span class="author">${escapeHtml(msg.handle || 'Anon')}</span>
+                    <span>${timeStr}</span>
+                </div>
+                <div>${escapeHtml(msg.message || '')}</div>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function subscribeToChatRealtime() {
+            if (!supabaseClient || chatChannel) return;
+
+            chatChannel = supabaseClient
+                .channel('public:chat_messages')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, payload => {
+                    appendChatMessage(payload.new);
+                })
+                .subscribe((status) => {
+                    const statusElem = document.getElementById('chat-status');
+                    if (status === 'SUBSCRIBED') {
+                        statusElem.innerText = '● LIVE CHANNEL ACTIVE';
+                        statusElem.style.color = 'var(--owner-green)';
+                    } else {
+                        statusElem.innerText = '○ SYNCING...';
+                        statusElem.style.color = '#888';
+                    }
+                });
+        }
+
+        async function sendChatMessage() {
+            if (checkBanState()) return;
+
+            const handleInput = document.getElementById('chat-handle');
+            const msgInput = document.getElementById('chat-msg-input');
+            
+            const handle = handleInput.value.trim() || 'Anon';
+            const message = msgInput.value.trim();
+
+            // --- CHAT RESTRICTION CHECKS ---
+            
+            // 1. Empty message check
+            if (!message) return;
+
+            // 2. Message length restriction (Max 250 characters)
+            if (message.length > 250) {
+                alert('RESTRICTION VIOLATION: Message exceeds maximum allowed limit of 250 characters.');
+                return;
+            }
+
+            // 3. Handle length restriction
+            if (handle.length > 20) {
+                alert('RESTRICTION VIOLATION: Handle cannot exceed 20 characters.');
+                return;
+            }
+
+            // 4. Rate Limiting Check (3 seconds cooldown)
+            const now = Date.now();
+            if (now - lastChatSentTime < 3000) {
+                alert('RATE LIMIT WARNING: Wait 3 seconds before transmitting another message.');
+                return;
+            }
+
+            // 5. Profanity / Restricted Word Filter
+            const lowerMsg = message.toLowerCase();
+            const containsForbiddenWord = BANNED_WORDS.some(word => lowerMsg.includes(word));
+            if (containsForbiddenWord) {
+                alert('SECURITY NOTICE: Your message contained restricted terms and was flagged.');
+                logSystemEvent(`CHAT FILTER: Message flagged for restricted terms from handle [${handle}]`);
+                msgInput.value = '';
+                return;
+            }
+
+            if (!supabaseClient) {
+                alert('Chat client not operational.');
+                return;
+            }
+
+            msgInput.value = '';
+            lastChatSentTime = Date.now();
+
+            const { error } = await supabaseClient
+                .from('chat_messages')
+                .insert([{ handle, message }]);
+
+            if (error) {
+                alert(`Transmission failed: ${error.message}`);
+            }
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>"']/g, (m) => {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+            });
+        }
+
+        // --- "THE TRUTH" MODAL DATA EXTRACTION ---
+        document.getElementById('truth-trigger').addEventListener('click', async () => {
+            if (checkBanState()) return;
+            const screen = document.getElementById('truth-screen');
+            screen.classList.add('active');
+
+            logSystemEvent('USER ACTION: Opened "THE TRUTH" telemetry layer.');
+
+            // Clear previous values
+            const fieldIds = ['data-ip', 'data-loc', 'data-weather', 'data-isp', 'data-screen', 'data-os', 'data-lang', 'data-cores', 'data-ram', 'data-battery', 'data-timezone', 'data-nettype', 'data-touch'];
+            fieldIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = '';
+            });
+
+            // Gather local telemetry
+            const screenRes = `${window.screen.width} x ${window.screen.height} (${window.devicePixelRatio}x DPI)`;
+            const os = navigator.platform || 'Unknown OS';
+            const lang = navigator.language || 'en-US';
+            const cores = navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} Cores` : 'Undisclosed Cores';
+            const ram = navigator.deviceMemory ? `~${navigator.deviceMemory} GB RAM` : 'Memory API Restricted';
+            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Unknown';
+            const netType = navigator.connection ? navigator.connection.effectiveType.toUpperCase() : 'Standard Network';
+            const touch = ('ontouchstart' in window || navigator.maxTouchPoints > 0) ? 'Touch Enabled' : 'Non-Touch Device';
+
+            let batteryStr = 'Battery API Unsupported';
+            if (navigator.getBattery) {
+                try {
+                    const batt = await navigator.getBattery();
+                    batteryStr = `${Math.round(batt.level * 100)}% (${batt.charging ? 'Plugged In' : 'On Battery'})`;
+                } catch(e) {}
+            }
+
+            let ip = 'Unknown', location = 'Unknown', isp = 'Unknown', weather = 'Weather Data Unavailable';
+
+            try {
+                const geo = await fetch('https://ipapi.co/json/').then(r => r.json());
+                ip = geo.ip || ip;
+                location = `${geo.city || ''}, ${geo.region || ''}, ${geo.country_name || ''}`;
+                isp = geo.org || isp;
+
+                if (geo.city) {
+                    const w = await fetch(`https://wttr.in/${geo.city}?format=%C+%t`).then(r => r.text());
+                    if (w && !w.includes('404')) weather = w.trim();
+                }
+            } catch(e) {}
+
+            // Sequence Typewriters
+            await typeWriterAsync(`IP ADDRESS: ${ip}`, 'data-ip', 25);
+            await typeWriterAsync(`LOCATION: ${location}`, 'data-loc', 25);
+            await typeWriterAsync(`ENVIRONMENT WEATHER: ${weather}`, 'data-weather', 25);
+            await typeWriterAsync(`SERVICE PROVIDER: ${isp}`, 'data-isp', 25);
+            await typeWriterAsync(`DISPLAY RES: ${screenRes}`, 'data-screen', 25);
+            await typeWriterAsync(`PLATFORM OS: ${os}`, 'data-os', 25);
+            await typeWriterAsync(`SYSTEM LANGUAGE: ${lang}`, 'data-lang', 25);
+            await typeWriterAsync(`CPU ARCHITECTURE: ${cores}`, 'data-cores', 25);
+            await typeWriterAsync(`DEVICE MEMORY: ${ram}`, 'data-ram', 25);
+            await typeWriterAsync(`POWER LEVEL: ${batteryStr}`, 'data-battery', 25);
+            await typeWriterAsync(`TIME ZONE: ${timezone}`, 'data-timezone', 25);
+            await typeWriterAsync(`CONNECTION LINK: ${netType}`, 'data-nettype', 25);
+            await typeWriterAsync(`INTERFACE HARDWARE: ${touch}`, 'data-touch', 25);
+        });
+
+        document.getElementById('truth-close').addEventListener('click', () => {
+            document.getElementById('truth-screen').classList.remove('active');
+        });
+
+        // --- SIDEBAR TOGGLE & OUTSIDE CLICK ---
+        function toggleSidebar(e) {
+            e.stopPropagation();
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        document.addEventListener('click', (e) => {
+            const sidebar = document.getElementById('sidebar');
+            const menuBtn = document.querySelector('.menu-btn');
+            if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
+                sidebar.classList.remove('open');
+            }
+        });
+
+        // --- MATRIX RAIN EFFECT ---
         function toggleMatrixRain() {
             const canvas = document.getElementById('matrix-canvas');
             if (canvas.style.display === 'block') {
                 canvas.style.display = 'none';
                 clearInterval(matrixInterval);
-                matrixInterval = null;
             } else {
                 canvas.style.display = 'block';
                 startMatrixRain();
@@ -1247,32 +1290,53 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
 
-            const chars = '0123456789ABCDEFABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            const fontSize = 14;
-            const columns = canvas.width / fontSize;
-            const drops = Array.from({ length: columns }).fill(1);
+            const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+            const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*';
+            const alphabet = katakana + latin;
 
-            function draw() {
+            const fontSize = 16;
+            const columns = Math.floor(canvas.width / fontSize);
+            const rainDrops = Array(columns).fill(1);
+
+            clearInterval(matrixInterval);
+            matrixInterval = setInterval(() => {
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                ctx.fillStyle = '#00ff66';
+                ctx.fillStyle = '#0F0';
                 ctx.font = fontSize + 'px monospace';
 
-                for (let i = 0; i < drops.length; i++) {
-                    const text = chars.charAt(Math.floor(Math.random() * chars.length));
-                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                for (let i = 0; i < rainDrops.length; i++) {
+                    const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                    ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
 
-                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                        drops[i] = 0;
+                    if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        rainDrops[i] = 0;
                     }
-                    drops[i]++;
+                    rainDrops[i]++;
                 }
-            }
-
-            if (matrixInterval) clearInterval(matrixInterval);
-            matrixInterval = setInterval(draw, 33);
+            }, 30);
         }
+
+        // --- CYCLE QUOTES & LATIN TEXT ---
+        function cycleQuote() {
+            typeWriter(quotesList[quoteIndex], 'quote-display', 35);
+            quoteIndex = (quoteIndex + 1) % quotesList.length;
+        }
+
+        function cycleLatin() {
+            typeWriter(latinList[latinIndex], 'latin-display', 50);
+            latinIndex = (latinIndex + 1) % latinList.length;
+        }
+
+        // --- INITIALIZATION ---
+        window.addEventListener('DOMContentLoaded', () => {
+            checkBanState();
+            cycleQuote();
+            cycleLatin();
+            setInterval(cycleQuote, 8000);
+            setInterval(cycleLatin, 12000);
+        });
     </script>
 </body>
 </html>
