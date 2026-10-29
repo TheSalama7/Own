@@ -14,7 +14,6 @@
             --text-color: #ffffff;
             --truth-purple: #bf00ff;
             --owner-green: #00ff66;
-            --chat-cyan: #00f0ff;
             --alert-red: #ff3333;
         }
 
@@ -200,12 +199,6 @@
         .vault-item:hover {
             color: var(--accent-color);
         }
-        .chat-sidebar-item {
-            color: var(--chat-cyan) !important;
-            border-left: 2px solid var(--chat-cyan);
-            padding-left: 8px;
-            margin-top: 2rem !important;
-        }
 
         /* --- Overlay Modals --- */
         .modal-screen {
@@ -266,85 +259,6 @@
             border-bottom: 1px dashed rgba(191, 0, 255, 0.15);
             padding-bottom: 4px;
             min-height: 1.4rem;
-        }
-
-        /* --- CHAT SYSTEM MODAL STYLING --- */
-        .chat-content {
-            background: rgba(8, 12, 16, 0.96);
-            border: 1px solid var(--chat-cyan);
-            padding: 1.8rem;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 600px;
-            height: 80vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 0 40px rgba(0, 240, 255, 0.2);
-            color: var(--text-color);
-            font-family: 'Courier New', Courier, monospace;
-        }
-        .chat-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(0, 240, 255, 0.3);
-            padding-bottom: 0.8rem;
-            margin-bottom: 1rem;
-        }
-        .chat-header h2 {
-            margin: 0;
-            color: var(--chat-cyan);
-            font-size: 1.3rem;
-            letter-spacing: 2px;
-        }
-        .chat-messages-box {
-            flex: 1;
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(0, 240, 255, 0.15);
-            border-radius: 6px;
-            padding: 1rem;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 0.8rem;
-            margin-bottom: 1rem;
-        }
-        .chat-msg {
-            background: rgba(255, 255, 255, 0.03);
-            padding: 0.6rem 0.8rem;
-            border-radius: 4px;
-            border-left: 2px solid var(--chat-cyan);
-            word-break: break-word;
-            font-size: 0.88rem;
-        }
-        .chat-msg .meta {
-            font-size: 0.72rem;
-            color: #777;
-            margin-bottom: 4px;
-            display: flex;
-            justify-content: space-between;
-        }
-        .chat-msg .author {
-            color: var(--chat-cyan);
-            font-weight: bold;
-        }
-        .chat-input-row {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-        .chat-input {
-            background: #000;
-            border: 1px solid rgba(0, 240, 255, 0.4);
-            color: #fff;
-            padding: 0.6rem 0.8rem;
-            font-family: 'Courier New', Courier, monospace;
-            border-radius: 4px;
-        }
-        .chat-input:focus {
-            outline: none;
-            border-color: var(--chat-cyan);
-            box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
         }
 
         /* --- OWNER CONTROL CENTER STYLING --- */
@@ -475,9 +389,8 @@
             .truth-btn { padding: 1rem 2rem; font-size: 1.15rem; letter-spacing: 2px; }
             .socials-box { gap: 1.5rem; margin-bottom: 2.5rem; }
             .latin-text { bottom: 0.6rem; left: 50%; transform: translateX(-50%); text-align: center; font-size: 0.7rem; width: 100%; }
-            .truth-content, .owner-content, .chat-content { padding: 1.2rem; width: 95%; }
+            .truth-content, .owner-content { padding: 1.2rem; width: 95%; }
             .data-row { font-size: 0.75rem; word-break: break-all; }
-            .chat-input-row { flex-direction: column; }
         }
     </style>
 </head>
@@ -532,9 +445,6 @@
         <div class="vault-item" onclick="accessVault('napoleon', false)">Napoleon the Great</div>
         <div class="vault-item" onclick="accessVault('cia_rr1', true)">Cia RR-1</div>
         <div class="vault-item" onclick="accessVault('french', false)">The French</div>
-        
-        <!-- GLOBAL CHAT LINK -->
-        <div class="vault-item chat-sidebar-item" onclick="openChat()">💬 Public Chat Node</div>
     </div>
 
     <!-- THE TRUTH SCREEN -->
@@ -558,28 +468,6 @@
                 <div class="data-row"><span id="data-touch"></span></div>
             </div>
             <button class="close-btn" id="truth-close">Escape</button>
-        </div>
-    </div>
-
-    <!-- CYBER CHAT MODAL -->
-    <div id="chat-screen" class="modal-screen">
-        <div class="chat-content">
-            <div class="chat-header">
-                <h2>[ LIVE NODE CHAT ]</h2>
-                <span style="font-size: 0.75rem; color: var(--chat-cyan);" id="chat-status">● CONNECTED</span>
-            </div>
-            
-            <div id="chat-messages" class="chat-messages-box">
-                <div style="color: #666; text-align: center; font-size: 0.8rem; margin-top: auto;">Initializing encrypted channel...</div>
-            </div>
-
-            <div class="chat-input-row">
-                <input type="text" id="chat-handle" class="chat-input" placeholder="Handle" style="width: 110px;" value="Anon">
-                <input type="text" id="chat-msg-input" class="chat-input" placeholder="Type message..." style="flex: 1;" onkeydown="if(event.key==='Enter') sendChatMessage()">
-                <button class="owner-btn" style="color: var(--chat-cyan); border-color: var(--chat-cyan); margin: 0;" onclick="sendChatMessage()">SEND</button>
-            </div>
-
-            <button class="close-btn" style="margin-top: 1rem; width: 100%;" onclick="closeChat()">Close Terminal</button>
         </div>
     </div>
 
@@ -671,12 +559,7 @@
         let latinIndex = 0;
         let latinClickCount = 0;
         let latinClickTimer = null;
-        let chatChannel = null;
-        let lastChatSentTime = 0;
         let matrixInterval = null;
-
-        // Banned words filter for Chat Restriction
-        const BANNED_WORDS = ['admin', 'root', 'nigger', 'faggot', 'spam', 'hack', 'exploit'];
 
         // --- VISITOR LOGGING ENGINE ---
         async function recordVisitorLog() {
@@ -1036,159 +919,6 @@
             document.getElementById('hash-output').value = await sha256(val);
         }
 
-        // --- CYBER REAL-TIME CHAT WITH RESTRICTIONS ---
-        async function openChat() {
-            if (checkBanState()) return;
-            document.getElementById('chat-screen').classList.add('active');
-            loadChatMessages();
-            subscribeToChatRealtime();
-        }
-
-        function closeChat() {
-            document.getElementById('chat-screen').classList.remove('active');
-            if (chatChannel && supabaseClient) {
-                supabaseClient.removeChannel(chatChannel);
-                chatChannel = null;
-            }
-        }
-
-        async function loadChatMessages() {
-            const container = document.getElementById('chat-messages');
-            if (!supabaseClient) {
-                container.innerHTML = '<div style="color:#ff3333; text-align:center;">Chat Database Unavailable.</div>';
-                return;
-            }
-
-            const { data, error } = await supabaseClient
-                .from('chat_messages')
-                .select('*')
-                .order('created_at', { ascending: true })
-                .limit(40);
-
-            if (error) {
-                container.innerHTML = `<div style="color:#ff3333; text-align:center;">Error loading chat history: ${error.message}</div>`;
-                return;
-            }
-
-            container.innerHTML = '';
-            if (!data || data.length === 0) {
-                container.innerHTML = '<div style="color:#777; text-align:center; margin-top:auto;">Channel empty. Be the first to broadcast.</div>';
-                return;
-            }
-
-            data.forEach(msg => appendChatMessage(msg));
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function appendChatMessage(msg) {
-            const container = document.getElementById('chat-messages');
-            
-            // Remove initial placeholder text if exists
-            if (container.children.length === 1 && container.children[0].style.textAlign === 'center') {
-                container.innerHTML = '';
-            }
-
-            const timeStr = msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'NOW';
-            
-            const div = document.createElement('div');
-            div.className = 'chat-msg';
-            div.innerHTML = `
-                <div class="meta">
-                    <span class="author">${escapeHtml(msg.handle || 'Anon')}</span>
-                    <span>${timeStr}</span>
-                </div>
-                <div>${escapeHtml(msg.message || '')}</div>
-            `;
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function subscribeToChatRealtime() {
-            if (!supabaseClient || chatChannel) return;
-
-            chatChannel = supabaseClient
-                .channel('public:chat_messages')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, payload => {
-                    appendChatMessage(payload.new);
-                })
-                .subscribe((status) => {
-                    const statusElem = document.getElementById('chat-status');
-                    if (status === 'SUBSCRIBED') {
-                        statusElem.innerText = '● LIVE CHANNEL ACTIVE';
-                        statusElem.style.color = 'var(--owner-green)';
-                    } else {
-                        statusElem.innerText = '○ SYNCING...';
-                        statusElem.style.color = '#888';
-                    }
-                });
-        }
-
-        async function sendChatMessage() {
-            if (checkBanState()) return;
-
-            const handleInput = document.getElementById('chat-handle');
-            const msgInput = document.getElementById('chat-msg-input');
-            
-            const handle = handleInput.value.trim() || 'Anon';
-            const message = msgInput.value.trim();
-
-            // --- CHAT RESTRICTION CHECKS ---
-            
-            // 1. Empty message check
-            if (!message) return;
-
-            // 2. Message length restriction (Max 250 characters)
-            if (message.length > 250) {
-                alert('RESTRICTION VIOLATION: Message exceeds maximum allowed limit of 250 characters.');
-                return;
-            }
-
-            // 3. Handle length restriction
-            if (handle.length > 20) {
-                alert('RESTRICTION VIOLATION: Handle cannot exceed 20 characters.');
-                return;
-            }
-
-            // 4. Rate Limiting Check (3 seconds cooldown)
-            const now = Date.now();
-            if (now - lastChatSentTime < 3000) {
-                alert('RATE LIMIT WARNING: Wait 3 seconds before transmitting another message.');
-                return;
-            }
-
-            // 5. Profanity / Restricted Word Filter
-            const lowerMsg = message.toLowerCase();
-            const containsForbiddenWord = BANNED_WORDS.some(word => lowerMsg.includes(word));
-            if (containsForbiddenWord) {
-                alert('SECURITY NOTICE: Your message contained restricted terms and was flagged.');
-                logSystemEvent(`CHAT FILTER: Message flagged for restricted terms from handle [${handle}]`);
-                msgInput.value = '';
-                return;
-            }
-
-            if (!supabaseClient) {
-                alert('Chat client not operational.');
-                return;
-            }
-
-            msgInput.value = '';
-            lastChatSentTime = Date.now();
-
-            const { error } = await supabaseClient
-                .from('chat_messages')
-                .insert([{ handle, message }]);
-
-            if (error) {
-                alert(`Transmission failed: ${error.message}`);
-            }
-        }
-
-        function escapeHtml(str) {
-            return str.replace(/[&<>"']/g, (m) => {
-                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
-            });
-        }
-
         // --- "THE TRUTH" MODAL DATA EXTRACTION ---
         document.getElementById('truth-trigger').addEventListener('click', async () => {
             if (checkBanState()) return;
@@ -1230,9 +960,14 @@
                 location = `${geo.city || ''}, ${geo.region || ''}, ${geo.country_name || ''}`;
                 isp = geo.org || isp;
 
+                // --- WEATHER FIX: Request plain format 3 and validate response ---
                 if (geo.city) {
-                    const w = await fetch(`https://wttr.in/${geo.city}?format=%C+%t`).then(r => r.text());
-                    if (w && !w.includes('404')) weather = w.trim();
+                    try {
+                        const w = await fetch(`https://wttr.in/${encodeURIComponent(geo.city)}?format=3`).then(r => r.text());
+                        if (w && !w.includes('<!DOCTYPE') && !w.includes('<html')) {
+                            weather = w.trim();
+                        }
+                    } catch(e) {}
                 }
             } catch(e) {}
 
